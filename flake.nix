@@ -46,5 +46,12 @@
             (lib python310)
           ];
         };
+
+        apps = {
+          tests310 = {
+            type = "app";
+            program = "${lib pkgs.python310}/bin/python";
+          };
+        };
       }));
 }
