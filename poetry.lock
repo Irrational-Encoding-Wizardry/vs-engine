@@ -1,0 +1,19 @@
+[[package]]
+name = "vapoursynth"
+version = "57"
+description = "A frameserver for the 21st century"
+category = "main"
+optional = false
+python-versions = "*"
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.10"
+content-hash = "07474528e5a06693d2092d439ad70cc9111a97ee0dae8391ec3bdc339d1d421c"
+
+[metadata.files]
+vapoursynth = [
+    {file = "VapourSynth-57-cp39-cp39-win32.whl", hash = "sha256:91f5eeee6c340bf58b712c32d2bf344d231d96d8fb42d6f6ac611d35fc2a3f42"},
+    {file = "VapourSynth-57-cp39-cp39-win_amd64.whl", hash = "sha256:42081d771c4dd865aff004565dec78336d17064c6983a1d4ed6a1e087b9dcb6b"},
+    {file = "VapourSynth-57.zip", hash = "sha256:da28cba8c453ede130cbe79b5954c73a3d948e13a75c2f3942767e082c4227d9"},
+]

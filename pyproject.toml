@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "vsengine"
+version = "0.1.0"
+description = "An engine for our vapoursynth previewers"
+authors = ["Sarah <cid+git@cid-chan.moe>"]
+license = "AGPLv3"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+VapourSynth = "^57"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
