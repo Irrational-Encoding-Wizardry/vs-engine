@@ -3,6 +3,8 @@ import unittest
 
 import vapoursynth
 
+from vsengine._testutils import forcefully_unregister_policy
+
 from vsengine.policy import GlobalStore
 from vsengine.policy import Policy, ManagedEnvironment
 from vsengine.policy import _ManagedPolicy
@@ -14,7 +16,7 @@ class PolicyTest(unittest.TestCase):
         self.policy = Policy(GlobalStore())
 
     def tearDown(self) -> None:
-        pass
+        forcefully_unregister_policy()
 
     def test_register(self):
         self.policy.register()
@@ -39,22 +41,17 @@ class PolicyTest(unittest.TestCase):
 
     def test_context_manager_on_error(self):
         try:
-            try:
-                with self.policy:
-                    raise RuntimeError()
-            finally:
-                try:
-                    with self.assertRaises(RuntimeError):
-                        self.policy.api.create_environment()
-                except:
-                    try:
-                        self.policy.unregister()
-                    except:
-                        pass
-                    raise
+            with self.policy:
+                raise RuntimeError()
         except RuntimeError:
             pass
 
+        self.assertRaises(RuntimeError, lambda: self.policy.api.create_environment())
+
+        try:
+            self.policy.unregister()
+        except:
+            pass
 
 
 class ManagedEnvironmentTest(unittest.TestCase):
