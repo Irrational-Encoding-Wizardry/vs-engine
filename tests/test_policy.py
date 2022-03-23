@@ -15,6 +15,9 @@ class PolicyTest(unittest.TestCase):
     def setUp(self) -> None:
         forcefully_unregister_policy()
         self.policy = Policy(GlobalStore())
+    
+    def tearDown(self) -> None:
+        forcefully_unregister_policy()
 
     def test_register(self):
         self.policy.register()
@@ -55,7 +58,9 @@ class PolicyTest(unittest.TestCase):
 class ManagedEnvironmentTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.policy = Policy(GlobalStore())
+        forcefully_unregister_policy()
+        self.store = GlobalStore()
+        self.policy = Policy(self.store)
         self.policy.register()
 
     def tearDown(self) -> None:
@@ -95,3 +100,17 @@ class ManagedEnvironmentTest(unittest.TestCase):
 
                 self.assertEqual(len(env1.outputs), 1)
                 self.assertEqual(len(env2.outputs), 0)
+
+    def test_inline_section(self):
+        with self.policy.new_environment() as env1:
+            with self.policy.new_environment() as env2:
+                env1.switch()
+
+                env_before = self.store.get_current_environment()
+
+                with env2.inline_section():
+                    self.assertNotEqual(vapoursynth.get_current_environment(), env1.vs_environment)
+                    self.assertEqual(env_before, self.store.get_current_environment())
+
+                self.assertEqual(vapoursynth.get_current_environment(), env1.vs_environment)
+                self.assertEqual(env_before, self.store.get_current_environment())

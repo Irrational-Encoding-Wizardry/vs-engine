@@ -167,13 +167,26 @@ class _ManagedPolicy(EnvironmentPolicy):
     _api: EnvironmentPolicyAPI|None
     _store: EnvironmentStore
     _mutex: threading.Lock
+    _local: threading.local
 
-    __slots__ = ("_api", "_store", "_mutex")
+    __slots__ = ("_api", "_store", "_mutex", "_local")
 
     def __init__(self, store: EnvironmentStore) -> None:
         self._store = store
         self._mutex = threading.Lock()
         self._api = None
+        self._local = threading.local()
+
+    # For engine-calls that require vapoursynth but
+    # should not make their switch observable from the outside.
+
+    # Start the section.
+    def inline_section_start(self, environment: EnvironmentData):
+        self._local.environment = environment
+
+    # End the section.
+    def inline_section_end(self):
+        self._local.environment = None
 
     @property
     def api(self):
@@ -190,6 +203,13 @@ class _ManagedPolicy(EnvironmentPolicy):
         logger.debug("Policy cleared.")
 
     def get_current_environment(self) -> EnvironmentData|None:
+        # For small segments, allow switching the environment inline.
+        # This is useful for vsengine-functions that require access to the
+        # vapoursynth api, but don't want to invoke the store for it.
+        if (env := getattr(self._local, "environment", None)) is not None:
+            if self.is_alive(env):
+                return env
+
         # We wrap everything in a mutex to make sure
         # no context-switch can reliably happen in this section.
         with self._mutex:
@@ -238,7 +258,7 @@ class ManagedEnvironment:
         """
         Returns the core representing this environment.
         """
-        with self.use():
+        with self.inline_section():
             return vs.core.core
 
     @property
@@ -246,8 +266,31 @@ class ManagedEnvironment:
         """
         Returns the output within this environment.
         """
-        with self.use():
+        with self.inline_section():
             return vs.get_outputs()
+
+    @contextlib.contextmanager
+    def inline_section(self) -> t.Generator[None, None, None]:
+        """
+        Private API!
+
+        Switches to the given environment within the block without
+        notifying the store.
+
+        If you follow the rules below, switching the environment
+        will be invisible to the caller.
+        
+        Rules for safely calling this function:
+        - Do not suspend greenlets within the block!
+        - Do not yield or await within the block!
+        - Do not use __enter__ and __exit__ directly.
+        - This function is not reentrant.
+        """
+        self._policy.managed.inline_section_start(self._data)
+        try:
+            yield
+        finally:
+            self._policy.managed.inline_section_end()
 
     @contextlib.contextmanager
     def use(self) -> t.Generator[None, None, None]:
