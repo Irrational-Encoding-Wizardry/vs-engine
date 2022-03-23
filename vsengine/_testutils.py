@@ -16,6 +16,12 @@ from vapoursynth import EnvironmentData
 import vapoursynth as vs
 
 
+__all__ = [
+    "forcefully_unregister_policy",
+    "use_standalone_policy"
+]
+
+
 class ProxyPolicy(EnvironmentPolicy):
     _api: EnvironmentPolicyAPI|None
     _policy: EnvironmentPolicy|None
@@ -80,6 +86,35 @@ class ProxyPolicy(EnvironmentPolicy):
 
 
 CURRENT_PROXY: ProxyPolicy|None = None
+class StandalonePolicy:
+    _current: EnvironmentData|None
+    _api: EnvironmentPolicyAPI|None
+    __slots__ = ("_current", "_api")
+
+    def __init__(self) -> None:
+        self._current = None
+        self._api = None
+
+    def on_policy_registered(self, special_api: EnvironmentPolicyAPI) -> None:
+        self._api = special_api
+        self._current = special_api.create_environment()
+
+    def on_policy_cleared(self):
+        assert self._api is not None
+        self._api.destroy_environment(self._current)
+        self._current = None
+
+    def get_current_environment(self):
+        return self._current
+
+    def set_environment(self, environment: EnvironmentData|None):
+        if environment is not None and environment is not self._current:
+            raise RuntimeError("No other environments should exist.")
+
+    def is_alive(self, environment: EnvironmentData):
+        return self._current is environment
+
+
 orig_register_policy = vs.register_policy
 
 
@@ -104,3 +139,7 @@ _policy = ProxyPolicy()
 orig_register_policy(_policy)
 
 forcefully_unregister_policy = _policy.forcefully_unregister_policy
+
+
+def use_standalone_policy():
+    _policy.attach_policy_to_proxy(StandalonePolicy())
