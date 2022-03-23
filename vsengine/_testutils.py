@@ -1,15 +1,41 @@
+# vs-engine
+# Copyright (C) 2022  cid-chan
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-This allows test-cases to forcefully unregister a policy, e.g.
-in case of test-failures.
+This allows test-cases to forcefully unregister a policy,
+e.g. in case of test-failures.
 
-This should ensure that failing tests can safely clean up the currently
-running policy.
+This should ensure that failing tests can safely clean up the current policy.
 
-It works by implementing a proxy policy and monkey-patching
-vapoursynth.register_policy.
+It works by implementing a proxy policy 
+and monkey-patching vapoursynth.register_policy.
+
+This policy is transparent to subsequent policies registering themselves.
+
+To unregister a policy, run forcefully_unregister_policy.
+
+As an addition,
+it prevents VapourSynth from creating a vapoursynth.StandalonePolicy.
+This ensures that no misbehaving test can accidentally prevent policy-based
+tests from registering their own policies.
+
+For policy-unrelated tests, use the function use_standalone_policy.
+This function will build a policy which only ever uses one environment.
 """
+
 import typing as t
-
 from vapoursynth import EnvironmentPolicyAPI, EnvironmentPolicy
 from vapoursynth import EnvironmentData
 
@@ -85,7 +111,6 @@ class ProxyPolicy(EnvironmentPolicy):
         return self._policy.is_alive(environment)
 
 
-CURRENT_PROXY: ProxyPolicy|None = None
 class StandalonePolicy:
     _current: EnvironmentData|None
     _api: EnvironmentPolicyAPI|None

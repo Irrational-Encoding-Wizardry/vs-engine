@@ -1,3 +1,75 @@
+# vs-engine
+# Copyright (C) 2022  cid-chan
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+vsengine.policy implements a basic object-oriented implementation of
+EnvironmentPolicies.
+
+
+Here a quick run-down in how to use it, (but be sure to read on to select
+the best store-implementation for you):
+
+    >>> import vapoursynth as vs
+    >>> policy = Policy(GlobalStore())
+    >>> policy.register()
+    >>> with policy.new_environment() as env:
+    ...    with env.use():
+    ...        vs.core.std.BlankClip().set_output()
+    ...    print(env.outputs)
+    {"0": <vapoursynth.VideoNode ...>}
+    >>> policy.unregister()
+
+
+To use it, you first have to pick an EnvironmentStore implementation.
+A EnvironmentStore is just a simple object implementing the methods
+set_current_environment and get_current_environment.
+These actually implement the state an EnvironmentPolicy is responsible
+for managing.
+
+For convenience, three EnvironmentStores have already been implemented,
+tailored for different uses and concurrency needs:
+
+- The GlobalStore is useful when you are ever only using one Environment
+  at the same time
+
+- ThreadLocalStore is useful when you writing a multi-threaded applications,
+  that can run multiple environments at once. This one behaves like vsscript.
+
+- ContextVarStore is useful when you are using event-loops like asyncio,
+  curio, and trio. When using this store, make sure to reuse the store 
+  between successive Policy-instances as otherwise the old store might
+  leak objects. More details are written in the documentation of the
+  contextvars module of the standard library.
+
+All three implementations can be instantiated without any arguments.
+
+
+The instance of the EnvironmentStore is then passed to Policy, on which
+you then call register on.
+
+You can create ManagedEnvironment-instances by calling
+policy.new_environment(). These instances can then be used to switch to
+the given environment, retrieve its outputs or get its core.
+
+Be aware that ManagedEnvironment-instances must call dispose() when
+you are done using them. Failing to do so will result in a warning.
+ManagedEnvironment is also a context-manager which does it for you.
+
+When reloading the application, you can call policy.unregister()
+"""
+
 import logging
 import typing as t
 import threading
@@ -156,10 +228,24 @@ class ManagedEnvironment:
 
     @property
     def vs_environment(self):
+        """
+        Returns the vapoursynth.Environment-object representing this environment.
+        """
         return self._environment
 
     @property
+    def core(self) -> vs.Core:
+        """
+        Returns the core representing this environment.
+        """
+        with self.use():
+            return vs.core.core
+
+    @property
     def outputs(self) -> t.Mapping[int, vs.VideoOutputTuple]:
+        """
+        Returns the output within this environment.
+        """
         with self.use():
             return vs.get_outputs()
 
