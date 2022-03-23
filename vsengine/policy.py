@@ -196,7 +196,8 @@ class ManagedEnvironment:
         if self._data is None:
             return
 
-        logger.warning(f"Disposing environment {self._data!r} on __del__. This is not recommended.")
+        import warnings
+        warnings.warn(f"Disposing {self!r} inside __del__. This might cause leaks.", ResourceWarning)
         self.dispose()
 
 

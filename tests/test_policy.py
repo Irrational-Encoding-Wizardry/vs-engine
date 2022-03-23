@@ -65,7 +65,7 @@ class ManagedEnvironmentTest(unittest.TestCase):
 
     def test_new_environment_warns_on_del(self):
         env = self.policy.new_environment()
-        with self.assertLogs(logger="vsengine.policy", level=logging.WARNING):
+        with self.assertWarns(ResourceWarning):
             del env
 
     def test_new_environment_can_dispose(self):
