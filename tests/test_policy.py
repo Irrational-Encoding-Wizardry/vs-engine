@@ -13,10 +13,8 @@ from vsengine.policy import _ManagedPolicy
 class PolicyTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.policy = Policy(GlobalStore())
-
-    def tearDown(self) -> None:
         forcefully_unregister_policy()
+        self.policy = Policy(GlobalStore())
 
     def test_register(self):
         self.policy.register()
