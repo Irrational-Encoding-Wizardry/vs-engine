@@ -6,8 +6,7 @@ import vapoursynth
 from vsengine._testutils import forcefully_unregister_policy
 
 from vsengine.policy import GlobalStore
-from vsengine.policy import Policy, ManagedEnvironment
-from vsengine.policy import _ManagedPolicy
+from vsengine.policy import Policy
 
 
 class PolicyTest(unittest.TestCase):
@@ -101,7 +100,12 @@ class ManagedEnvironmentTest(unittest.TestCase):
                 self.assertEqual(len(env1.outputs), 1)
                 self.assertEqual(len(env2.outputs), 0)
 
-    def test_inline_section(self):
+    def test_environment_can_capture_cores(self):
+        with self.policy.new_environment() as env1:
+            with self.policy.new_environment() as env2:
+                self.assertNotEqual(env1.core, env2.core)
+
+    def test_inline_section_is_invisible(self):
         with self.policy.new_environment() as env1:
             with self.policy.new_environment() as env2:
                 env1.switch()
