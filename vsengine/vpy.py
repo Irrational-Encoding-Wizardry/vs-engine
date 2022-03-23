@@ -1,0 +1,266 @@
+# vs-engine
+# Copyright (C) 2022  cid-chan
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+vsengine.vpy runs vpy-scripts for you.
+
+    >>> script("/path/to/my/script").execute()
+    >>> code("print('Hello, World!')").execute()
+
+script() and code() will create a Script-object which allows
+you to run the script and access its environment.
+
+script() takes a path as the first argument while code() accepts
+code (either compiled, parsed or as a string/bytes) and returns the Script-
+object.
+
+Both methods accept an optional second argument which can either be an
+environment or a policy. If it's an environment, it will run the script
+in that environment. If it's a policy, it will create a new environment and
+store the environment within the environment-attribute of the Script-instance,
+which you have to dispose manually.
+
+Additional keyword arguments include inline, which defaults to true, will
+run the script in a separate worker thread, when set to false. Another
+keyword argument is chdir, which will change the current directory during
+execution.
+
+A Script object has the function run() which returns a future which will
+reject with ExecutionFailed or with resolve with None.
+
+A convenience function called execute() which will block
+until the script has run.
+
+A Script-instance is awaitable, in which it will await the completion of the
+script.
+"""
+import contextlib
+import typing as t
+import pathlib
+import runpy
+import types
+import ast
+import os
+from concurrent.futures import Future
+
+from vapoursynth import Environment, get_current_environment
+
+from vsengine.loops import to_thread, make_awaitable
+from vsengine.policy import Policy, ManagedEnvironment
+
+
+T = t.TypeVar("T")
+Runner = t.Callable[[t.Callable[[], T]], Future[T]]
+Executor = t.Callable[[t.ContextManager[None]], None]
+
+
+__all__ = [
+    "ExecutionFailed", "script", "code"
+]
+
+
+class ExecutionFailed(Exception):
+
+    #: It contains the actual exception that has been raised.
+    parent_error: BaseException
+
+    def __init__(self, parent_error: BaseException):
+        super().__init__("Running the script has failed")
+        self.parent_error = parent_error
+
+
+def inline_runner(func: t.Callable[[], T]) -> Future[T]:
+    fut = Future()
+    try:
+        result = func()
+    except BaseException as e:
+        fut.set_exception(e)
+    else:
+        fut.set_result(result)
+    return fut
+
+
+def chdir_runner(dir: os.PathLike, parent: Runner[T]) -> Runner[T]:
+    def runner(func):
+        def _wrapped():
+            current = os.getcwd()
+            os.chdir(dir)
+            try:
+                return func()
+            finally:
+                os.chdir(current)
+        return parent(_wrapped)
+    return runner
+
+
+class Script:
+    environment: Environment|ManagedEnvironment
+
+    def __init__(self,
+            what: Executor,
+            environment: Environment|ManagedEnvironment,
+            runner: Runner[T]
+    ) -> None:
+        self.what = what
+        self.environment = environment
+        self.runner = runner
+        self._future = None
+
+    @contextlib.contextmanager
+    def _wrap_exception_early(self):
+        try:
+            yield
+        except BaseException as e:
+            raise ExecutionFailed(e) from None
+
+    def _run_inline(self):
+        with self.environment.use():
+            self.what(self._wrap_exception_early())
+
+    ###
+    # Public API
+
+    def run(self) -> Future[None]:
+        """
+        Runs the script.
+
+        It returns a future which completes when the script completes.
+        When the script fails, it raises a ExecutionFailed.
+        """
+        if self._future is None:
+            self._future = self.runner(self._run_inline)
+        return self._future
+
+    def execute(self) -> None:
+        """
+        Runs the script and blocks until the script has finished running.
+        """
+        return self.run().result()
+
+    def dispose(self):
+        """
+        Disposes the managed environment.
+        """
+        if not isinstance(self.environment, ManagedEnvironment):
+            raise ValueError("You can only scripts backed by managed environments")
+        self.environment.dispose()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _, __, ___):
+        if isinstance(self.environment, ManagedEnvironment):
+            self.dispose()
+
+    async def run_async(self):
+        """
+        Runs the script asynchronously, but it returns a coroutine.
+        """
+        return await make_awaitable(self.run())
+
+    def __await__(self):
+        """
+        Runs the script and waits until the script has completed.
+        """
+        return self.run_async().__await__()
+
+
+def script(
+    script: os.PathLike,
+    environment: Environment|ManagedEnvironment|Policy|None = None,
+    *,
+    inline: bool=True,
+    chdir: os.PathLike|None = None
+) -> Script:
+    """
+    Runs the script at the given path.
+
+    :param path: If path is a path, the interpreter will run the file behind that path.
+                 Otherwise it will execute it itself.
+    :param environment: Defines the environment in which the code should run. If passed
+                        a Policy, it will create a new environment from the policy, which
+                        can be acessed using the environment attribute.
+    :param inline: Run the code inline, e.g. not in a separate thread.
+    :param chdir: Change the currently running directory while the script is running.
+                  This is unsafe when running multiple scripts at once.
+    :returns: A script object. It script starts running when you call start() on it,
+              or await it.
+    """
+    def _execute(ctx):
+        with ctx:
+            runpy.run_path(str(script), {}, "__vapoursynth__")
+
+    return _load(_execute, environment, inline=inline, chdir=chdir)
+
+
+def code(
+        script: str|bytes|ast.AST|types.CodeType,
+        environment: Environment|ManagedEnvironment|Policy|None = None,
+        *,
+        inline: bool=True,
+        chdir: os.PathLike|None = None
+) -> Script:
+    """
+    Runs the given code.
+
+    :param path: If path is a path, the interpreter will run the file behind that path.
+                 Otherwise it will execute it itself.
+    :param environment: Defines the environment in which the code should run. If passed
+                        a Policy, it will create a new environment from the policy, which
+                        can be acessed using the environment attribute.
+    :param inline: Run the code inline, e.g. not in a separate thread.
+    :param chdir: Change the currently running directory while the script is running.
+                  This is unsafe when running multiple scripts at once.
+    :returns: A script object. It script starts running when you call start() on it,
+              or await it.
+    """
+    def _execute(ctx):
+        with ctx:
+            if isinstance(script, types.CodeType):
+                code = script
+            else:
+                code = compile(
+                    script,
+                    filename="<runvpy>",
+                    dont_inherit=True,
+                    flags=0,
+                    mode="exec"
+                )
+            module = {}
+            exec(code, module, module)
+    return _load(_execute, environment, inline=inline, chdir=chdir)
+
+
+def _load(
+        script: Executor,
+        environment: Environment|ManagedEnvironment|Policy|None,
+        *,
+        inline: bool=True,
+        chdir: os.PathLike|None = None
+) -> Script:
+    if inline:
+        runner = inline_runner
+    else:
+        runner = to_thread
+
+    if isinstance(environment, Policy):
+        environment = environment.new_environment()
+    elif environment is None:
+        environment = get_current_environment()
+
+    if chdir is not None:
+        runner = chdir_runner(chdir, runner)
+
+    return Script(script, environment, runner)

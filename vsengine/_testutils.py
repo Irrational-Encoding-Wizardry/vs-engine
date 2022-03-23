@@ -45,7 +45,11 @@ import vapoursynth as vs
 __all__ = [
     "forcefully_unregister_policy",
     "use_standalone_policy"
+    "BLACKBOARD"
 ]
+
+
+BLACKBOARD = {}
 
 
 class ProxyPolicy(EnvironmentPolicy):

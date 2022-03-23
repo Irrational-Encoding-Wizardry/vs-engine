@@ -308,12 +308,19 @@ class ManagedEnvironment:
         self._environment.use().__enter__()
 
     def dispose(self):
-        if self._data is None:
+        if self.disposed:
             return
 
         logger.debug(f"Disposing environment {self._data!r}.")
         self._policy.api.destroy_environment(self._data)
         self._data = None
+
+    @property
+    def disposed(self) -> bool:
+        """
+        Checks if the environment is disposed
+        """
+        return self._data is None
 
     def __enter__(self):
         return self
