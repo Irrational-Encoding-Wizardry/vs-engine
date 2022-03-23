@@ -74,7 +74,7 @@ class ManagedEnvironmentTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             env.use().__enter__()
 
-    def test_new_environment_can_switch(self):
+    def test_new_environment_can_use_context(self):
         with self.policy.new_environment() as env:
             with self.assertRaises(vapoursynth.Error):
                 vapoursynth.core.std.BlankClip().set_output(0)
@@ -84,6 +84,13 @@ class ManagedEnvironmentTest(unittest.TestCase):
 
             with self.assertRaises(vapoursynth.Error):
                 vapoursynth.core.std.BlankClip().set_output(0)
+
+    def test_environment_can_switch(self):
+        env = self.policy.new_environment()
+        self.assertRaises(vapoursynth.Error, lambda: vapoursynth.core.std.BlankClip().set_output(0))
+        env.switch()
+        vapoursynth.core.std.BlankClip().set_output(0)
+        env.dispose()
 
     def test_environment_can_capture_outputs(self):
         with self.policy.new_environment() as env1:

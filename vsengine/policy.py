@@ -171,6 +171,13 @@ class ManagedEnvironment:
         with self._environment.use():
             yield
 
+    def switch(self):
+        """
+        Switches to the given environment without storing
+        which environment has been defined previously.
+        """
+        self._environment.use().__enter__()
+
     def dispose(self):
         if self._data is None:
             return
