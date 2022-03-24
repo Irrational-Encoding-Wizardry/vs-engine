@@ -44,8 +44,11 @@ import vapoursynth as vs
 
 __all__ = [
     "forcefully_unregister_policy",
-    "use_standalone_policy"
-    "BLACKBOARD"
+    "use_standalone_policy",
+
+    "BLACKBOARD",
+
+    "wrap_test_for_asyncio"
 ]
 
 
@@ -172,3 +175,15 @@ forcefully_unregister_policy = _policy.forcefully_unregister_policy
 
 def use_standalone_policy():
     _policy.attach_policy_to_proxy(StandalonePolicy())
+
+
+def wrap_test_for_asyncio(func):
+    import asyncio
+    from vsengine.loops import set_loop
+    from vsengine.adapters.asyncio import AsyncIOLoop
+    def test_case(self):
+        async def _run():
+            set_loop(AsyncIOLoop())
+            await func(self)
+        asyncio.run(_run())
+    return test_case

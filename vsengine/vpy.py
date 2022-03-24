@@ -46,9 +46,8 @@ until the script has run.
 A Script-instance is awaitable, in which it will await the completion of the
 script.
 """
-import contextlib
 import typing as t
-import pathlib
+import inspect
 import runpy
 import types
 import ast
@@ -63,7 +62,7 @@ from vsengine.policy import Policy, ManagedEnvironment
 
 T = t.TypeVar("T")
 Runner = t.Callable[[t.Callable[[], T]], Future[T]]
-Executor = t.Callable[[t.ContextManager[None]], None]
+Executor = t.Callable[[t.ContextManager[None], t.Mapping[str, t.Any]], None]
 
 
 __all__ = [
@@ -81,6 +80,16 @@ class ExecutionFailed(Exception):
         self.parent_error = parent_error
 
 
+class WrapAllErrors:
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc, val, tb):
+        if val is not None:
+            raise ExecutionFailed(val) from None
+
+
 def inline_runner(func: t.Callable[[], T]) -> Future[T]:
     fut = Future()
     try:
@@ -93,12 +102,16 @@ def inline_runner(func: t.Callable[[], T]) -> Future[T]:
 
 
 def chdir_runner(dir: os.PathLike, parent: Runner[T]) -> Runner[T]:
-    def runner(func):
+    def runner(func, *args, **kwargs):
         def _wrapped():
             current = os.getcwd()
             os.chdir(dir)
             try:
-                return func()
+                f = func(*args, **kwargs)
+                return f
+            except Exception as e:
+                print(e)
+                raise
             finally:
                 os.chdir(current)
         return parent(_wrapped)
@@ -116,18 +129,12 @@ class Script:
         self.what = what
         self.environment = environment
         self.runner = runner
+        self.module = types.ModuleType("__vapoursynth__")
         self._future = None
-
-    @contextlib.contextmanager
-    def _wrap_exception_early(self):
-        try:
-            yield
-        except BaseException as e:
-            raise ExecutionFailed(e) from None
 
     def _run_inline(self):
         with self.environment.use():
-            self.what(self._wrap_exception_early())
+            self.what(WrapAllErrors(), self.module.__dict__)
 
     ###
     # Public API
@@ -143,7 +150,7 @@ class Script:
             self._future = self.runner(self._run_inline)
         return self._future
 
-    def execute(self) -> None:
+    def result(self) -> None:
         """
         Runs the script and blocks until the script has finished running.
         """
@@ -179,7 +186,7 @@ class Script:
 
 def script(
     script: os.PathLike,
-    environment: Environment|ManagedEnvironment|Policy|None = None,
+    environment: Environment|ManagedEnvironment|Policy|Script|None = None,
     *,
     inline: bool=True,
     chdir: os.PathLike|None = None
@@ -198,9 +205,9 @@ def script(
     :returns: A script object. It script starts running when you call start() on it,
               or await it.
     """
-    def _execute(ctx):
+    def _execute(ctx, module_dict):
         with ctx:
-            runpy.run_path(str(script), {}, "__vapoursynth__")
+            runpy.run_path(str(script), module_dict, "__vapoursynth__")
 
     return _load(_execute, environment, inline=inline, chdir=chdir)
 
@@ -219,14 +226,16 @@ def code(
                  Otherwise it will execute it itself.
     :param environment: Defines the environment in which the code should run. If passed
                         a Policy, it will create a new environment from the policy, which
-                        can be acessed using the environment attribute.
+                        can be acessed using the environment attribute. If the environment
+                        is another Script, it will take the environment and module of the
+                        script.
     :param inline: Run the code inline, e.g. not in a separate thread.
     :param chdir: Change the currently running directory while the script is running.
                   This is unsafe when running multiple scripts at once.
     :returns: A script object. It script starts running when you call start() on it,
               or await it.
     """
-    def _execute(ctx):
+    def _execute(ctx, module_dict):
         with ctx:
             if isinstance(script, types.CodeType):
                 code = script
@@ -238,8 +247,7 @@ def code(
                     flags=0,
                     mode="exec"
                 )
-            module = {}
-            exec(code, module, module)
+            exec(code, module_dict, module_dict)
     return _load(_execute, environment, inline=inline, chdir=chdir)
 
 
@@ -255,12 +263,19 @@ def _load(
     else:
         runner = to_thread
 
+    previous_module = None
     if isinstance(environment, Policy):
         environment = environment.new_environment()
+    elif isinstance(environment, Script):
+        previous_module = environment.module
+        environment = environment.environment
     elif environment is None:
         environment = get_current_environment()
 
     if chdir is not None:
         runner = chdir_runner(chdir, runner)
 
-    return Script(script, environment, runner)
+    result = Script(script, environment, runner)
+    if previous_module is not None:
+        result.module = previous_module
+    return result
