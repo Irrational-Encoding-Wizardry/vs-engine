@@ -16,8 +16,8 @@
 """
 vsengine.vpy runs vpy-scripts for you.
 
-    >>> script("/path/to/my/script").execute()
-    >>> code("print('Hello, World!')").execute()
+    >>> script("/path/to/my/script").result()
+    >>> code("print('Hello, World!')").result()
 
 script() and code() will create a Script-object which allows
 you to run the script and access its environment.

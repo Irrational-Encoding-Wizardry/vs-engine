@@ -151,16 +151,18 @@ current_loop = NO_LOOP
 
 def get_loop() -> EventLoop:
     """
-    Returns the currently running loop.
+    :return: The currently running loop.
     """
     return current_loop
 
-def set_loop(loop: EventLoop):
+def set_loop(loop: EventLoop) -> None:
     """
     Sets the currently running loop.
 
     It will detach the previous loop first. If attaching fails,
     it will revert to the NoLoop-implementation which runs everything inline
+
+    :param loop: The event-loop instance that implements features.
     """
     global current_loop
     current_loop.detach()
@@ -175,7 +177,14 @@ def set_loop(loop: EventLoop):
 def from_thread(func: t.Callable[..., T], *args: t.Any, **kwargs: t.Any) -> Future[T]:
     """
     Runs a function inside the current event-loop, preserving the currently running
-    environment.
+    vapoursynth environment (if any).
+
+    .. note:: Be aware that the function might be called inline!
+
+    :param func: A function to call inside the current event loop.
+    :param args: The arguments for the function.
+    :param kwargs: The keyword arguments to pass to the function.
+    :return: A future that resolves and reject depending on the outcome.
     """
     try:
         environment = vapoursynth.get_current_environment().use()
@@ -191,7 +200,13 @@ def from_thread(func: t.Callable[..., T], *args: t.Any, **kwargs: t.Any) -> Futu
 
 def to_thread(func: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any) -> t.Any:
     """
-    Runs a function in a dedicated thread
+    Runs a function in a dedicated thread or worker, preserving the currently running
+    vapoursynth environment (if any).
+
+    :param func: A function to call inside the current event loop.
+    :param args: The arguments for the function.
+    :param kwargs: The keyword arguments to pass to the function.
+    :return: An loop-specific object.
     """
     try:
         environment = vapoursynth.get_current_environment().use()
@@ -205,5 +220,6 @@ def to_thread(func: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any) -> t.
     return get_loop().to_thread(_wrapper)
 
 
-async def make_awaitable(future: Future[T]) -> t.Awaitable[T]:
-    return await get_loop().await_future(future)
+async def make_awaitable(future: Future[T]) -> T:
+    return t.cast(T, await get_loop().await_future(future))
+
