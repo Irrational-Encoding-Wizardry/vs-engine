@@ -82,7 +82,78 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "poetry2nix": "poetry2nix"
+        "poetry2nix": "poetry2nix",
+        "vs_57_vs": "vs_57_vs",
+        "vs_57_zimg": "vs_57_zimg",
+        "vs_latest_vs": "vs_latest_vs",
+        "vs_latest_zimg": "vs_latest_zimg"
+      }
+    },
+    "vs_57_vs": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1634048763,
+        "narHash": "sha256-tPQ1SOIpFevOYzL9a8Lc5+dv2egVX1CY3km8yWVv+Sk=",
+        "owner": "vapoursynth",
+        "repo": "vapoursynth",
+        "rev": "325756ed04588b31840fdb74479537cddcba4bf7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vapoursynth",
+        "ref": "R57",
+        "repo": "vapoursynth",
+        "type": "github"
+      }
+    },
+    "vs_57_zimg": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1647482635,
+        "narHash": "sha256-ANhZ3qt+BMMIXGCIXq4UA0EgSwVuwIAZrgHOQxPpyYA=",
+        "owner": "sekrit-twc",
+        "repo": "zimg",
+        "rev": "dd4c4dff3ce6a2877bd6ba57c1be99759b9cb2da",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sekrit-twc",
+        "ref": "v3.0",
+        "repo": "zimg",
+        "type": "github"
+      }
+    },
+    "vs_latest_vs": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1647771597,
+        "narHash": "sha256-cQuJ/nvAqxverkGPhEkTQoM3pkKXA+fDqFkCv6S1u7Q=",
+        "owner": "vapoursynth",
+        "repo": "vapoursynth",
+        "rev": "c39bb1772ed662c244bd71b8294394b3407e513b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vapoursynth",
+        "repo": "vapoursynth",
+        "type": "github"
+      }
+    },
+    "vs_latest_zimg": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1647482635,
+        "narHash": "sha256-ANhZ3qt+BMMIXGCIXq4UA0EgSwVuwIAZrgHOQxPpyYA=",
+        "owner": "sekrit-twc",
+        "repo": "zimg",
+        "rev": "dd4c4dff3ce6a2877bd6ba57c1be99759b9cb2da",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sekrit-twc",
+        "ref": "v3.0",
+        "repo": "zimg",
+        "type": "github"
       }
     }
   },

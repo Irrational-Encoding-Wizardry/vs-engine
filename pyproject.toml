@@ -3,15 +3,20 @@ name = "vsengine"
 version = "0.1.0"
 description = "An engine for our vapoursynth previewers"
 authors = ["Sarah <cid+git@cid-chan.moe>"]
-license = "AGPLv3"
+license = "AGPL-3.0-or-later"
+
+packages = [
+  { include = "vsengine" },
+]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-VapourSynth = "^57"
+python = "^3.9"
+VapourSynth = ">=57"
 trio = {version = "^0.20.0", optional = true}
+PyQt5 = {version = "^5.15.0", optional = true}
 
-[tool.poetry.dev-dependencies]
-trio-asyncio = "^0.12.0"
+[tool.poetry.extras]
+trio = ["trio"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
