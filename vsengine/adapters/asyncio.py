@@ -17,7 +17,7 @@ import typing as t
 import asyncio
 import contextlib
 import contextvars
-from concurrent.futures import Future, CancelledError
+from concurrent.futures import Future
 
 from vsengine.loops import EventLoop, Cancelled
 
@@ -31,7 +31,7 @@ class AsyncIOLoop(EventLoop):
     """
     loop: asyncio.AbstractEventLoop
 
-    def __init__(self, loop: asyncio.AbstractEventLoop|None = None) -> None:
+    def __init__(self, loop: t.Optional[asyncio.AbstractEventLoop] = None) -> None:
         if loop is None:
             loop = asyncio.get_event_loop()
         self.loop = loop
@@ -52,9 +52,7 @@ class AsyncIOLoop(EventLoop):
 
         ctx = contextvars.copy_context()
         def _wrap():
-            try:
-                future.set_running_or_notify_cancel()
-            except CancelledError:
+            if not future.set_running_or_notify_cancel():
                 return
 
             try:
@@ -75,15 +73,19 @@ class AsyncIOLoop(EventLoop):
         return asyncio.to_thread(_wrap)
 
     async def await_future(self, future: Future[T]) -> T:
-        return await asyncio.wrap_future(future, loop=self.loop)
+        with self.wrap_cancelled():
+            return await asyncio.wrap_future(future, loop=self.loop)
 
-    def throw_if_cancelled(self) -> None:
+    def next_cycle(self) -> Future[None]:
+        future = Future()
         task = asyncio.current_task()
-        if task is None:
-            return
-
-        if task.cancelled():
-            raise Cancelled
+        def continuation():
+            if task is None or not task.cancelled():
+                future.set_result(None)
+            else:
+                future.set_exception(Cancelled())
+        self.loop.call_soon(continuation)
+        return future
 
     @contextlib.contextmanager
     def wrap_cancelled(self):

@@ -56,61 +56,6 @@ class SpinLoop(EventLoop):
 
 class NoLoopTest(unittest.TestCase):
 
-    def test_from_thread_runs_inline_with_success(self) -> None:
-        def test_func():
-            return self
-        
-        loop = _NoEventLoop()
-        self.assertIs(loop.from_thread(test_func).result(timeout=0.1), self)
-
-    def test_from_thread_runs_inline_with_failure(self) -> None:
-        def test_func():
-            raise RuntimeError
-        
-        loop = _NoEventLoop()
-        self.assertRaises(RuntimeError, lambda: loop.from_thread(test_func).result(timeout=0.1))
-
-    def test_from_thread_forwards_correctly(self) -> None:
-        a = None
-        k = None
-        def test_func(*args, **kwargs):
-            nonlocal a, k
-            a = args
-            k = kwargs
-
-        loop = _NoEventLoop()
-        loop.from_thread(test_func, 1, 2, 3, a="b", c="d").result(timeout=0.1)
-        self.assertEqual(a, (1,2,3))
-        self.assertEqual(k, {"a": "b", "c": "d"})
-
-    def test_to_thread_spawns_a_new_thread(self):
-        def test_func():
-            return threading.current_thread()
-
-        loop = _NoEventLoop()
-        t2 = loop.to_thread(test_func).result(timeout=0.1)
-        self.assertNotEqual(threading.current_thread(), t2)
-
-
-    def test_to_thread_runs_inline_with_failure(self) -> None:
-        def test_func():
-            raise RuntimeError
-        
-        loop = _NoEventLoop()
-        self.assertRaises(RuntimeError, lambda: loop.to_thread(test_func).result(timeout=0.1))
-
-    def test_to_thread_forwards_correctly(self) -> None:
-        a = None
-        k = None
-        def test_func(*args, **kwargs):
-            nonlocal a, k
-            a = args
-            k = kwargs
-
-        loop = _NoEventLoop()
-        loop.to_thread(test_func, 1, 2, 3, a="b", c="d").result(timeout=0.1)
-        self.assertEqual(a, (1,2,3))
-        self.assertEqual(k, {"a": "b", "c": "d"})
 
     def test_wrap_cancelled_converts_the_exception(self) -> None:
         loop = _NoEventLoop()

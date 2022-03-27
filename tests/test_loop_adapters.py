@@ -66,9 +66,12 @@ class AdapterTest:
                     raise RuntimeError()
 
     @make_async
-    def test_throw_if_cancelled_doesnt_throw_when_not_cancelled(self):
+    def test_next_cycle_doesnt_throw_when_not_cancelled(self):
         with self.with_loop() as loop:
-            loop.throw_if_cancelled()
+            fut = loop.next_cycle()
+            yield
+            self.assertTrue(fut.done())
+            self.assertIs(fut.result(), None)
 
     @make_async
     def test_from_thread_with_success(self) -> None:

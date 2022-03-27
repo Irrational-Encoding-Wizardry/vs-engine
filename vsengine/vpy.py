@@ -47,7 +47,6 @@ A Script-instance is awaitable, in which it will await the completion of the
 script.
 """
 import typing as t
-import inspect
 import runpy
 import types
 import ast
@@ -119,11 +118,11 @@ def chdir_runner(dir: os.PathLike, parent: Runner[T]) -> Runner[T]:
 
 
 class Script:
-    environment: Environment|ManagedEnvironment
+    environment: t.Union[Environment, ManagedEnvironment]
 
     def __init__(self,
             what: Executor,
-            environment: Environment|ManagedEnvironment,
+            environment: t.Union[Environment, ManagedEnvironment],
             runner: Runner[T]
     ) -> None:
         self.what = what
@@ -185,11 +184,17 @@ class Script:
 
 
 def script(
-    script: os.PathLike,
-    environment: Environment|ManagedEnvironment|Policy|Script|None = None,
-    *,
-    inline: bool=True,
-    chdir: os.PathLike|None = None
+        script: os.PathLike,
+        environment: t.Union[
+                Environment,
+                ManagedEnvironment,
+                Policy,
+                Script,
+                None
+        ] = None,
+        *,
+        inline: bool=True,
+        chdir: t.Optional[os.PathLike] = None
 ) -> Script:
     """
     Runs the script at the given path.
@@ -213,11 +218,17 @@ def script(
 
 
 def code(
-        script: str|bytes|ast.AST|types.CodeType,
-        environment: Environment|ManagedEnvironment|Policy|None = None,
+        script: t.Union[str,bytes,ast.AST,types.CodeType],
+        environment: t.Union[
+                Environment,
+                ManagedEnvironment,
+                Policy,
+                Script,
+                None
+        ] = None,
         *,
         inline: bool=True,
-        chdir: os.PathLike|None = None
+        chdir: t.Optional[os.PathLike] = None
 ) -> Script:
     """
     Runs the given code.
@@ -253,10 +264,16 @@ def code(
 
 def _load(
         script: Executor,
-        environment: Environment|ManagedEnvironment|Policy|None,
+        environment: t.Union[
+                Environment,
+                ManagedEnvironment,
+                Policy,
+                Script,
+                None
+        ] = None,
         *,
         inline: bool=True,
-        chdir: os.PathLike|None = None
+        chdir: t.Optional[os.PathLike] = None
 ) -> Script:
     if inline:
         runner = inline_runner
@@ -279,3 +296,4 @@ def _load(
     if previous_module is not None:
         result.module = previous_module
     return result
+

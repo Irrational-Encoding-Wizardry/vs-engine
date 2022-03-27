@@ -1,11 +1,10 @@
 from concurrent.futures import Future
-from math import inf
 import typing as t
 import contextlib
 
 from trio import Cancelled as TrioCancelled
-from trio import current_effective_deadline
 from trio import CapacityLimiter
+from trio import CancelScope
 from trio import Nursery
 from trio import to_thread
 from trio import Event
@@ -23,7 +22,7 @@ class TrioEventLoop(EventLoop):
     def __init__(
             self,
             nursery: Nursery,
-            limiter: CapacityLimiter|None=None
+            limiter: t.Optional[CapacityLimiter]=None
     ) -> None:
         if limiter is None:
             limiter = t.cast(CapacityLimiter, to_thread.current_default_thread_limiter())
@@ -61,13 +60,6 @@ class TrioEventLoop(EventLoop):
                 return
 
             try:
-                self.throw_if_cancelled()
-            except Cancelled:
-                fut.set_exception(Cancelled())
-                return
-
-
-            try:
                 result = func(*args, **kwargs)
             except BaseException as e:
                 fut.set_exception(e)
@@ -76,6 +68,37 @@ class TrioEventLoop(EventLoop):
             
         self._token.run_sync_soon(_executor)
         return fut
+
+    async def to_thread(self, func: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any):
+        """
+        Run this function in a worker thread.
+        """
+        result = None
+        error: BaseException|None = None
+        def _executor():
+            nonlocal result, error
+            try:
+                result = func(*args, **kwargs)
+            except BaseException as e:
+                error = e
+
+        await to_thread.run_sync(_executor, limiter=self.limiter)
+        if error is not None:
+            assert isinstance(error, BaseException)
+            raise t.cast(BaseException, error)
+        else:
+            return result
+
+    def next_cycle(self) -> Future[None]:
+        scope = CancelScope()
+        future = Future()
+        def continuation():
+            if scope.cancel_called:
+                future.set_exception(Cancelled())
+            else:
+                future.set_result(None)
+        self.from_thread(continuation)
+        return future
 
     async def await_future(self, future: Future[T]) -> T:
         """
@@ -103,40 +126,10 @@ class TrioEventLoop(EventLoop):
             raise
 
         if error is not None:
-            raise t.cast(BaseException, error)
+            with self.wrap_cancelled():
+                raise t.cast(BaseException, error)
         else:
             return t.cast(T, result)
-
-
-    async def to_thread(self, func: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any):
-        """
-        Run this function in a worker thread.
-        """
-        result = None
-        error: BaseException|None = None
-        def _executor():
-            nonlocal result, error
-            try:
-                result = func(*args, **kwargs)
-            except BaseException as e:
-                error = e
-
-        await to_thread.run_sync(_executor, limiter=self.limiter)
-        if error is not None:
-            assert isinstance(error, BaseException)
-            raise t.cast(BaseException, error)
-        else:
-            return result
-
-    def throw_if_cancelled(self) -> None:
-        """
-        Throw vsengine.loops.Cancelled if the current context has been
-        cancelled.
-
-        If cancellation is not natively supported, this function is a no-op.
-        """
-        if current_effective_deadline() == -inf:
-            raise Cancelled
 
     @contextlib.contextmanager
     def wrap_cancelled(self):

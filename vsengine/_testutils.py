@@ -56,8 +56,8 @@ BLACKBOARD = {}
 
 
 class ProxyPolicy(EnvironmentPolicy):
-    _api: EnvironmentPolicyAPI|None
-    _policy: EnvironmentPolicy|None
+    _api: t.Optional[EnvironmentPolicyAPI]
+    _policy: t.Optional[EnvironmentPolicy]
 
     __slots__ = ("_api", "_policy")
 
@@ -102,12 +102,12 @@ class ProxyPolicy(EnvironmentPolicy):
             self._api = None
             vs.register_policy = orig_register_policy
 
-    def get_current_environment(self) -> EnvironmentData|None:
+    def get_current_environment(self) -> t.Optional[EnvironmentData]:
         if self._policy is None:
             raise RuntimeError("This proxy is not attached to a policy.")
         return self._policy.get_current_environment()
 
-    def set_environment(self, environment: EnvironmentData|None) -> None:
+    def set_environment(self, environment: t.Optional[EnvironmentData]) -> None:
         if self._policy is None:
             raise RuntimeError("This proxy is not attached to a policy.")
         return self._policy.set_environment(environment)
@@ -119,8 +119,8 @@ class ProxyPolicy(EnvironmentPolicy):
 
 
 class StandalonePolicy:
-    _current: EnvironmentData|None
-    _api: EnvironmentPolicyAPI|None
+    _current: t.Optional[EnvironmentData]
+    _api: t.Optional[EnvironmentPolicyAPI]
     __slots__ = ("_current", "_api")
 
     def __init__(self) -> None:
@@ -139,7 +139,7 @@ class StandalonePolicy:
     def get_current_environment(self):
         return self._current
 
-    def set_environment(self, environment: EnvironmentData|None):
+    def set_environment(self, environment: t.Optional[EnvironmentData]):
         if environment is not None and environment is not self._current:
             raise RuntimeError("No other environments should exist.")
 

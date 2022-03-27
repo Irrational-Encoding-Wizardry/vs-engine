@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from concurrent.futures import Future, CancelledError
 import contextlib
+import functools
 import typing as t
 
 import vapoursynth
@@ -26,7 +27,8 @@ T_co = t.TypeVar("T_co", covariant=True)
 
 __all__ = [
     "EventLoop", "Cancelled",
-    "get_loop", "set_loop", "run_in_loop"
+    "get_loop", "set_loop",
+    "to_thread", "from_thread", "keep_environment"
 ]
 
 
@@ -36,6 +38,10 @@ class Cancelled(Exception): pass
 @contextlib.contextmanager
 def _noop():
     yield
+
+
+DONE = Future()
+DONE.set_result(None)
 
 
 class EventLoop:
@@ -67,25 +73,14 @@ class EventLoop:
         """
         ...
 
-    def await_future(self, future: Future[T]) -> t.Awaitable[T]:
-        """
-        Await a concurrent future.
-
-        This function does not need to be implemented if the event-loop
-        does not support async and await.
-        """
-        raise NotImplementedError
-
     def to_thread(self, func: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any) -> t.Any:
         """
         Run this function in a worker thread.
         """
         fut = Future()
         def wrapper():
-            try:
-                fut.set_running_or_notify_cancel()
-            except CancelledError:
-                pass
+            if not fut.set_running_or_notify_cancel():
+                return
 
             try:
                 result = func(*args, **kwargs)
@@ -98,14 +93,29 @@ class EventLoop:
         threading.Thread(target=wrapper).start()
         return fut
 
-    def throw_if_cancelled(self) -> None:
+    def next_cycle(self) -> Future[None]:
         """
-        Throw vsengine.loops.Cancelled if the current context has been
-        cancelled.
+        Passes control back to the event loop.
 
-        If cancellation is not natively supported, this function is a no-op.
+        If there is no event-loop, the function will always return a resolved future.
+        If there is an event-loop, the function will never return a resolved future.
+
+        Throws vsengine.loops.Cancelled if the operation has been cancelled by that time.
+
+        Only works in the main thread.
         """
-        pass
+        future = Future()
+        self.from_thread(future.set_result, None)
+        return future
+
+    def await_future(self, future: Future[T]) -> t.Awaitable[T]:
+        """
+        Await a concurrent future.
+
+        This function does not need to be implemented if the event-loop
+        does not support async and await.
+        """
+        raise NotImplementedError
 
     @contextlib.contextmanager
     def wrap_cancelled(self):
@@ -128,6 +138,9 @@ class _NoEventLoop(EventLoop):
 
     def detach(self) -> None:
         pass
+
+    def next_cycle(self) -> Future[None]:
+        return DONE
 
     def from_thread(
             self,
@@ -174,6 +187,27 @@ def set_loop(loop: EventLoop) -> None:
         raise
 
 
+def keep_environment(func: t.Callable[..., T]) -> t.Callable[..., T]:
+    """
+    This decorator will return a function that keeps the environment
+    that was active when the decorator was applied.
+
+    :param func: A function to decorate.
+    :returns: A wrapped function that keeps the environment.
+    """
+    try:
+        environment = vapoursynth.get_current_environment().use
+    except RuntimeError:
+        environment = _noop
+
+    @functools.wraps(func)
+    def _wrapper(*args, **kwargs):
+        with environment():
+            return func(*args, **kwargs)
+
+    return _wrapper
+
+
 def from_thread(func: t.Callable[..., T], *args: t.Any, **kwargs: t.Any) -> Future[T]:
     """
     Runs a function inside the current event-loop, preserving the currently running
@@ -186,14 +220,10 @@ def from_thread(func: t.Callable[..., T], *args: t.Any, **kwargs: t.Any) -> Futu
     :param kwargs: The keyword arguments to pass to the function.
     :return: A future that resolves and reject depending on the outcome.
     """
-    try:
-        environment = vapoursynth.get_current_environment().use()
-    except RuntimeError:
-        environment = _noop()
 
+    @keep_environment
     def _wrapper():
-        with environment:
-            return func(*args, **kwargs)
+        return func(*args, **kwargs)
 
     return get_loop().from_thread(_wrapper)
 
@@ -208,14 +238,9 @@ def to_thread(func: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any) -> t.
     :param kwargs: The keyword arguments to pass to the function.
     :return: An loop-specific object.
     """
-    try:
-        environment = vapoursynth.get_current_environment().use()
-    except RuntimeError:
-        environment = _noop()
-
+    @keep_environment
     def _wrapper():
-        with environment:
-            return func(*args, **kwargs)
+        return func(*args, **kwargs)
     
     return get_loop().to_thread(_wrapper)
 

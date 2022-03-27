@@ -94,13 +94,13 @@ class EnvironmentStore(t.Protocol):
     """
     Environment Stores manage which environment is currently active.
     """
-    def set_current_environment(self, environment: EnvironmentData|None):
+    def set_current_environment(self, environment: t.Optional[EnvironmentData]):
         """
         Set the current environment in the store.
         """
         ...
 
-    def get_current_environment(self) -> EnvironmentData|None:
+    def get_current_environment(self) -> t.Optional[EnvironmentData]:
         """
         Retrieve the current environment from the store (if any)
         """
@@ -111,16 +111,16 @@ class GlobalStore(EnvironmentStore):
     """
     This is the simplest store: It just stores the environment in a variable.
     """
-    _current: EnvironmentData|None
+    _current: t.Optional[EnvironmentData]
     __slots__ = ("_current",)
 
     def __init__(self) -> None:
         self._current = None
     
-    def set_current_environment(self, environment: EnvironmentData | None):
+    def set_current_environment(self, environment: t.Optional[EnvironmentData]):
         self._current = environment
 
-    def get_current_environment(self) -> EnvironmentData | None:
+    def get_current_environment(self) -> t.Optional[EnvironmentData]:
         return self._current
 
 
@@ -136,10 +136,10 @@ class ThreadLocalStore(EnvironmentStore):
     def __init__(self) -> None:
         self._current = threading.local()
 
-    def set_current_environment(self, environment: EnvironmentData | None):
+    def set_current_environment(self, environment: t.Optional[EnvironmentData]):
         self._current.environment = environment
 
-    def get_current_environment(self) -> EnvironmentData | None:
+    def get_current_environment(self) -> t.Optional[EnvironmentData]:
         return getattr(self._current, "environment", None)
 
 
@@ -147,15 +147,15 @@ class ContextVarStore(EnvironmentStore):
     """
     If you are using AsyncIO or similar frameworks, use this store.
     """
-    _current: contextvars.ContextVar[EnvironmentData|None]
+    _current: contextvars.ContextVar[t.Optional[EnvironmentData]]
 
     def __init__(self, name: str="vapoursynth") -> None:
         self._current = contextvars.ContextVar(name)
 
-    def set_current_environment(self, environment: EnvironmentData | None):
+    def set_current_environment(self, environment: t.Optional[EnvironmentData]):
         self._current.set(environment)
 
-    def get_current_environment(self) -> EnvironmentData | None:
+    def get_current_environment(self) -> t.Optional[EnvironmentData]:
         return self._current.get(None)
 
 
@@ -164,7 +164,7 @@ class _ManagedPolicy(EnvironmentPolicy):
     This class directly interfaces with VapourSynth.
     """
 
-    _api: EnvironmentPolicyAPI|None
+    _api: t.Optional[EnvironmentPolicyAPI]
     _store: EnvironmentStore
     _mutex: threading.Lock
     _local: threading.local
@@ -202,7 +202,7 @@ class _ManagedPolicy(EnvironmentPolicy):
         self._api = None
         logger.debug("Policy cleared.")
 
-    def get_current_environment(self) -> EnvironmentData|None:
+    def get_current_environment(self) -> t.Optional[EnvironmentData]:
         # For small segments, allow switching the environment inline.
         # This is useful for vsengine-functions that require access to the
         # vapoursynth api, but don't want to invoke the store for it.
@@ -401,3 +401,4 @@ class Policy:
         You will rarely need to use this directly.
         """
         return self._managed
+
