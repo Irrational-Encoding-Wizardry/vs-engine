@@ -38,7 +38,7 @@
         pversion = pkgs.lib.removePrefix "r" version;
         format = "pyproject";
         src = ./.;
-        buildInputs = [ ps.poetry ps.setuptools vapoursynth ps.trio ps.pyqt5 ];
+        buildInputs = [ ps.poetry ps.setuptools vapoursynth ps.trio ps.timeout-decorator ];
       };
     in
     {
@@ -87,7 +87,6 @@
           projectDir = ./.;
           overrides = pkgs.poetry2nix.overrides.withDefaults (self: super: {
             vapoursynth = makeVapourSynthPackage release self;
-            pyqt5 = python.pkgs.pyqt5;
           });
           extraPackages = (ps: [
             ps.ipython
@@ -100,12 +99,14 @@
             py = python.withPackages (ps: with ps; [
               (module pkgs (moduleVs ps) ps)
               (moduleVs ps)
+
               trio
+              timeout-decorator
             ]);
           in 
           ''
             touch $out
-            ${py}/bin/python -m unittest discover -s ${./tests}
+            ${pkgs.coreutils}/bin/timeout 30 ${py}/bin/python -m unittest discover -s ${./tests}
           ''
         );
       in
