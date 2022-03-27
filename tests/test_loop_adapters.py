@@ -238,7 +238,7 @@ class AsyncIOTest(AsyncAdapterTest, unittest.TestCase):
 try:
     import trio
 except ImportError:
-    pass
+    print("Skipping trio")
 else:
     from vsengine.adapters.trio import TrioEventLoop
     class TrioTest(AsyncAdapterTest, unittest.TestCase):
@@ -286,3 +286,4 @@ else:
         def assertCancelled(self):
             with self.assertRaises(trio.Cancelled):
                 yield
+

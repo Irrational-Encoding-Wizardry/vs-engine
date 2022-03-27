@@ -84,8 +84,6 @@ def buffer_futures(futures: t.Iterable[Future[T_co]], prefetch: int=0, backlog: 
         finished = True
 
 
-
-
 def close_when_needed(future_iterable: t.Iterable[Future[t.ContextManager[T]]]) -> t.Iterable[Future[T]]:
     def copy_future_and_run_cb_before(fut):
         f = Future()
@@ -97,7 +95,8 @@ def close_when_needed(future_iterable: t.Iterable[Future[t.ContextManager[T]]]) 
             else:
                 new_r = r.__enter__()
                 f.set_result(new_r)
-        f.add_done_callback(_as_completed)
+
+        fut.add_done_callback(_as_completed)
         return f
 
     def close_fut(f: Future[t.ContextManager[T]]):
@@ -106,12 +105,6 @@ def close_when_needed(future_iterable: t.Iterable[Future[t.ContextManager[T]]]) 
                 f.result().__exit__(None, None, None)
         f.add_done_callback(_do_close)
 
-    previous = None
     for fut in future_iterable:
-        if previous is not None:
-            close_fut(fut)
-        previous = fut
         yield copy_future_and_run_cb_before(fut)
-
-    if previous is not None:
-        close_fut(previous)
+        close_fut(fut)

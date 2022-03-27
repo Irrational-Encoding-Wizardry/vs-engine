@@ -133,7 +133,7 @@ class StandalonePolicy:
 
     def on_policy_cleared(self):
         assert self._api is not None
-        self._api.destroy_environment(self._current)
+        # self._api.destroy_environment(self._current)
         self._current = None
 
     def get_current_environment(self):

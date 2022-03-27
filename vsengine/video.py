@@ -39,12 +39,12 @@ def render(
         backlog: t.Optional[int]=0,
 
         y4m: bool = False
-) -> t.Iterable[Future[t.Tuple[int, int, bytes]]]:
+) -> t.Iterable[Future[t.Tuple[int, bytes]]]:
 
     frame_count = len(node)
     
     if y4m:
-        y4mformat = "error"
+        y4mformat = ""
         if node.format.color_family == vapoursynth.GRAY:
             y4mformat = 'mono'
             if node.format.bits_per_sample > 8:
@@ -78,7 +78,7 @@ def render(
             fps_den=node.fps_den,
             length=frame_count
         )
-        yield UnifiedFuture.resolve((0, frame_count, data.encode("ascii")))
+        yield UnifiedFuture.resolve((0, data.encode("ascii")))
 
     current_frame = 0
     def render_single_frame(frame: vapoursynth.VideoFrame) -> t.Tuple[int, int, bytes]:
@@ -89,7 +89,7 @@ def render(
         for plane in frame:
             buf.append(bytes(plane))
 
-        return current_frame, frame_count, b"".join(buf)
+        return current_frame, b"".join(buf)
 
     for frame, fut in enumerate(frames(node, prefetch=prefetch, backlog=backlog).futures, 1):
         current_frame = frame

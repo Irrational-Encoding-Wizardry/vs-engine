@@ -204,6 +204,35 @@ class UnifiedIteratorTest(unittest.TestCase):
         self.assertIs(state.exception(), err)
         self.assertIsNotNone(next(iterator))
 
+    def test_run_as_completed_requests_as_needed(self):
+        my_futures = [Future(), Future()]
+        requested = []
+        continued = []
+
+        def _add_to_result(f):
+            pass
+
+        def _it():
+            for fut in my_futures:
+                requested.append(fut)
+                yield fut
+                continued.append(fut)
+
+        state = UnifiedIterator(_it()).run_as_completed(_add_to_result)
+        self.assertFalse(state.done())
+        self.assertEqual(requested, [my_futures[0]])
+        self.assertEqual(continued, [])
+
+        my_futures[0].set_result(1)
+        self.assertFalse(state.done())
+        self.assertEqual(requested, [my_futures[0], my_futures[1]])
+        self.assertEqual(continued, [my_futures[0]])
+
+        my_futures[1].set_result(1)
+        self.assertTrue(state.done())
+        self.assertEqual(requested, [my_futures[0], my_futures[1]])
+        self.assertEqual(continued, [my_futures[0], my_futures[1]])
+
     def test_run_as_completed_cancels_on_iterator_crash(self):
         err = RuntimeError("test")
         def _it():
