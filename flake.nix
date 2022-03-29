@@ -47,6 +47,9 @@
       let
         pkgs = import nixpkgs {
           inherit system;
+          config = {
+            allowUnsupportedSystem = true;
+          };
         };
 
         findForRelease = release:
