@@ -246,5 +246,11 @@ def to_thread(func: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any) -> t.
 
 
 async def make_awaitable(future: Future[T]) -> T:
+    """
+    Makes a future awaitable.
+
+    :param future: The future to make awaitable.
+    :return: An object that can be awaited.
+    """
     return t.cast(T, await get_loop().await_future(future))
 
