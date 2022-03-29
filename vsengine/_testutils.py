@@ -36,8 +36,12 @@ This function will build a policy which only ever uses one environment.
 """
 
 import typing as t
+
+from vsengine._hospice import admit_environment
+
 from vapoursynth import EnvironmentPolicyAPI, EnvironmentPolicy
 from vapoursynth import EnvironmentData
+from vapoursynth import Core, core
 
 import vapoursynth as vs
 
@@ -85,6 +89,9 @@ class ProxyPolicy(EnvironmentPolicy):
         if self._api is None:
             return
 
+        self._policy.on_policy_cleared()
+        self._policy = None
+
         self._api.unregister_policy()
         orig_register_policy(self)
 
@@ -121,7 +128,8 @@ class ProxyPolicy(EnvironmentPolicy):
 class StandalonePolicy:
     _current: t.Optional[EnvironmentData]
     _api: t.Optional[EnvironmentPolicyAPI]
-    __slots__ = ("_current", "_api")
+    _core: t.Optional[Core]
+    __slots__ = ("_current", "_api", "_core")
 
     def __init__(self) -> None:
         self._current = None
@@ -130,11 +138,15 @@ class StandalonePolicy:
     def on_policy_registered(self, special_api: EnvironmentPolicyAPI) -> None:
         self._api = special_api
         self._current = special_api.create_environment()
+        self._core = core.core
 
     def on_policy_cleared(self):
         assert self._api is not None
-        # self._api.destroy_environment(self._current)
+
+        admit_environment(self._current, self._core)
+
         self._current = None
+        self._core = None
 
     def get_current_environment(self):
         return self._current

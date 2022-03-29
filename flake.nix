@@ -93,8 +93,9 @@
           ]);
         };
 
-        makeTest = vapoursynth: python: pkgs.runCommand "test_py${toString python.version}_vs${toString vapoursynth}_run" {} (
+        makeTest = vapoursynth: py: pkgs.runCommand "test_py${toString py}_vs${toString vapoursynth}_run" {} (
           let 
+            python = pkgs."python${py}";
             moduleVs = makeVapourSynthPackage vapoursynth;
             py = python.withPackages (ps: with ps; [
               (module pkgs (moduleVs ps) ps)
@@ -106,7 +107,7 @@
           in 
           ''
             touch $out
-            ${pkgs.coreutils}/bin/timeout 30 ${py}/bin/python -m unittest discover -s ${./tests}
+            ${pkgs.coreutils}/bin/timeout 30 ${py}/bin/python -m unittest discover -v -s ${./tests}
           ''
         );
       in

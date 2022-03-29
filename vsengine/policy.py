@@ -75,6 +75,9 @@ import typing as t
 import threading
 import contextlib
 import contextvars
+
+from vsengine._hospice import admit_environment
+
 from vapoursynth import EnvironmentPolicy, EnvironmentPolicyAPI
 from vapoursynth import Environment, EnvironmentData
 from vapoursynth import register_policy
@@ -312,6 +315,7 @@ class ManagedEnvironment:
             return
 
         logger.debug(f"Disposing environment {self._data!r}.")
+        admit_environment(self._data, self.core)
         self._policy.api.destroy_environment(self._data)
         self._data = None
 
