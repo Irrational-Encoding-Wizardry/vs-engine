@@ -8,7 +8,8 @@ jobs:
     strategy:
       matrix:
         vs: ["57", "latest"]
-        py: ["39", "310"]
+        # py: ["39", "310"]
+        py: ["39"]
     steps:
     - uses: actions/checkout@v2.4.0
     - uses: cachix/install-nix-action@v15
