@@ -1,4 +1,4 @@
-name: "Test"
+name: "Test Linux"
 on:
   pull_request:
   push:
@@ -18,4 +18,4 @@ jobs:
       with:
         name: vs-engine
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: nix flake check -L .#test_py${py}_vs${vs}
+    - run: nix build -L .#checks.x86_64-linux.py${{ matrix.py }}_vs${{ matrix.vs }}
