@@ -14,6 +14,22 @@ def frame(node: vapoursynth.VideoNode, frameno: int) -> Future[vapoursynth.Video
     return node.get_frame_async(frameno)
 
 
+@unified()
+def planes(node: vapoursynth.VideoNode, frameno: int, planes: t.Optional[t.Sequence[int]]=None) -> Future[t.Tuple[bytes, ...]]:
+    def _extract(frame: vapoursynth.VideoFrame):
+        try:
+            # This might be a variable format clip.
+            # extract the plane as late as possible.
+            if planes is None:
+                ps = range(len(frame))
+            else:
+                ps = planes
+            return [bytes(frame[p]) for p in ps]
+        finally:
+            frame.close()
+    return frame(node, frameno).map(_extract)
+
+
 @unified(type="generator")
 def frames(
         node: vapoursynth.VideoNode,
