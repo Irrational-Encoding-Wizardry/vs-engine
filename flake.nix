@@ -93,9 +93,9 @@
           ]);
         };
 
-        makeTest = vapoursynth: py: pkgs.runCommand "test_py${toString py}_vs${toString vapoursynth}_run" {} (
+        makeTest = vapoursynth: py_version: pkgs.runCommand "test_py${toString py_version}_vs${toString vapoursynth}_run" {} (
           let 
-            python = pkgs."python${py}";
+            python = pkgs."python${py_version}";
             moduleVs = makeVapourSynthPackage vapoursynth;
             py = python.withPackages (ps: with ps; [
               (module pkgs (moduleVs ps) ps)
@@ -122,7 +122,7 @@
 
         checks = builtins.listToAttrs (map (v: {
           name = "py${v.py_versions}_vs${toString v.vs_versions}";
-          value = makeTest v.vs_versions (pkgs."python${v.py_versions}");
+          value = makeTest v.vs_versions v.py_versions;
         }) (pkgs.lib.cartesianProductOfSets { inherit py_versions vs_versions; }));
       }));
 }
