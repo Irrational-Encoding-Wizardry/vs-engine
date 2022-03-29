@@ -69,9 +69,10 @@ ManagedEnvironment is also a context-manager which does it for you.
 
 When reloading the application, you can call policy.unregister()
 """
+import typing as t
 
 import logging
-import typing as t
+import weakref
 import threading
 import contextlib
 import contextvars
@@ -97,13 +98,13 @@ class EnvironmentStore(t.Protocol):
     """
     Environment Stores manage which environment is currently active.
     """
-    def set_current_environment(self, environment: t.Optional[EnvironmentData]):
+    def set_current_environment(self, environment: t.Any):
         """
         Set the current environment in the store.
         """
         ...
 
-    def get_current_environment(self) -> t.Optional[EnvironmentData]:
+    def get_current_environment(self) -> t.Any:
         """
         Retrieve the current environment from the store (if any)
         """
@@ -218,15 +219,22 @@ class _ManagedPolicy(EnvironmentPolicy):
         with self._mutex:
             current_environment = self._store.get_current_environment()
             if current_environment is None:
+                return
+
+            if current_environment() is None:
+                logger.warn(f"Got dead environment: {current_environment()!r}")
+                self._store.set_current_environment(None)
                 return None
 
-            if not self.is_alive(current_environment):
-                logger.warn(f"Got dead environment: {current_environment!r}")
+            received_environment = current_environment()
+
+            if not self.is_alive(received_environment):
+                logger.warn(f"Got dead environment: {received_environment!r}")
                 # Remove the environment.
                 self._store.set_current_environment(None)
                 return None
 
-            return current_environment
+            return t.cast(EnvironmentData, received_environment)
 
     def set_environment(self, environment: EnvironmentData) -> None:
         with self._mutex:
@@ -235,7 +243,10 @@ class _ManagedPolicy(EnvironmentPolicy):
                 self._store.set_current_environment(None)
             else:
                 logger.debug(f"Setting environment: {environment!r}")
-                self._store.set_current_environment(environment)
+                if environment is None:
+                    self._store.set_current_environment(None)
+                else:
+                    self._store.set_current_environment(weakref.ref(environment))
 
 
 class ManagedEnvironment:
