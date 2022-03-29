@@ -19,14 +19,19 @@ def frames(
         node: vapoursynth.VideoNode,
         *,
         prefetch: int=0,
-        backlog: t.Optional[int]=0,
+        backlog: t.Optional[int]=None,
 
         # Unlike the implementation provided by VapourSynth,
         # we don't have to care about backwards compatibility and
         # can just do the right thing from the beginning.
         close: bool=True
 ) -> t.Iterable[Future[vapoursynth.VideoFrame]]:
-    it = buffer_futures((node.get_frame_async(n) for n in range(len(node))), prefetch=prefetch, backlog=backlog)
+    it = (node.get_frame_async(n) for n in range(len(node)))
+
+    # If backlog is zero, skip.
+    if backlog is None or backlog > 0:
+        it = buffer_futures(it, prefetch=prefetch, backlog=backlog)
+
     if close:
         it = close_when_needed(it)
     return it
@@ -81,7 +86,7 @@ def render(
         yield UnifiedFuture.resolve((0, data.encode("ascii")))
 
     current_frame = 0
-    def render_single_frame(frame: vapoursynth.VideoFrame) -> t.Tuple[int, int, bytes]:
+    def render_single_frame(frame: vapoursynth.VideoFrame) -> t.Tuple[int, bytes]:
         buf = []
         if y4m:
             buf.append(b"FRAME\n")

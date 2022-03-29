@@ -1,6 +1,5 @@
 import typing as t
 import unittest
-from timeout_decorator import timeout
 
 from vsengine._testutils import forcefully_unregister_policy, use_standalone_policy
 
@@ -33,35 +32,50 @@ class TestVideo(unittest.TestCase):
 
     def test_single_frame(self):
         clip = self.generate_video()
-        f = frame(clip, 0).result(timeout=0.1)
-        self.assertEqual(f.props["FrameNumber"], 0)
+        with frame(clip, 0).result(timeout=0.1) as f:
+            self.assertEqual(f.props["FrameNumber"], 0)
 
-        f = frame(clip, 1).result(timeout=0.1)
-        self.assertEqual(f.props["FrameNumber"], 1)
+        with frame(clip, 1).result(timeout=0.1) as f:
+            self.assertEqual(f.props["FrameNumber"], 1)
         
-        f = frame(clip, 2).result(timeout=0.1)
-        self.assertEqual(f.props["FrameNumber"], 2)
+        with frame(clip, 2).result(timeout=0.1) as f:
+            self.assertEqual(f.props["FrameNumber"], 2)
 
-    @timeout(1)
     def test_multiple_frames(self):
         clip = self.generate_video()
         for nf, f in enumerate(frames(clip)):
             self.assertEqual(f.props["FrameNumber"], nf)
 
-    @timeout(1)
+    def test_multiple_frames_closes_after_iteration(self):
+        clip = self.generate_video()
+
+        it = iter(frames(clip))
+        f1 = next(it)
+
+        try:
+            f2 = next(it)
+        except:
+            f1.close()
+            raise
+
+        try:
+            with self.assertRaises(RuntimeError):
+                f1.props
+        finally:
+            f2.close()
+            next(it).close()
+    
     def test_multiple_frames_without_closing(self):
         clip = self.generate_video()
         for nf, f in enumerate(frames(clip, close=False)):
             self.assertEqual(f.props["FrameNumber"], nf)
             f.close()
 
-    @timeout(1)
     def test_render(self):
         clip = self.generate_video()
         data = b"".join((f[1] for f in render(clip)))
         self.assertEqual(data, b"\0\0\0")
 
-    @timeout(1)
     def test_render_y4m(self):
         clip = self.generate_video()
         data = b"".join((f[1] for f in render(clip, y4m=True)))
