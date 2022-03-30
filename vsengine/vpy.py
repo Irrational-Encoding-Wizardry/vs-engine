@@ -61,11 +61,11 @@ from vsengine.policy import Policy, ManagedEnvironment
 
 T = t.TypeVar("T")
 Runner = t.Callable[[t.Callable[[], T]], Future[T]]
-Executor = t.Callable[[t.ContextManager[None], t.Mapping[str, t.Any]], None]
+Executor = t.Callable[[t.ContextManager[None], types.ModuleType], None]
 
 
 __all__ = [
-    "ExecutionFailed", "script", "code"
+    "ExecutionFailed", "script", "code", "run"
 ]
 
 
@@ -122,18 +122,19 @@ class Script:
 
     def __init__(self,
             what: Executor,
+            module: types.ModuleType,
             environment: t.Union[Environment, ManagedEnvironment],
             runner: Runner[T]
     ) -> None:
         self.what = what
         self.environment = environment
         self.runner = runner
-        self.module = types.ModuleType("__vapoursynth__")
+        self.module = module
         self._future = None
 
     def _run_inline(self):
         with self.environment.use():
-            self.what(WrapAllErrors(), self.module.__dict__)
+            self.what(WrapAllErrors(), self.module)
 
     ###
     # Public API
@@ -183,16 +184,15 @@ class Script:
         return self.run_async().__await__()
 
 
+
+EnvironmentType = t.Union[Environment, ManagedEnvironment, Policy, Script]
+
+
 def script(
         script: os.PathLike,
-        environment: t.Union[
-                Environment,
-                ManagedEnvironment,
-                Policy,
-                Script,
-                None
-        ] = None,
+        environment: t.Optional[EnvironmentType]=None,
         *,
+        module_name: str = "__vapoursynth__",
         inline: bool=True,
         chdir: t.Optional[os.PathLike] = None
 ) -> Script:
@@ -204,34 +204,30 @@ def script(
     :param environment: Defines the environment in which the code should run. If passed
                         a Policy, it will create a new environment from the policy, which
                         can be acessed using the environment attribute.
+    :param module_name: The name the module should get. Defaults to __vapoursynth__.
     :param inline: Run the code inline, e.g. not in a separate thread.
     :param chdir: Change the currently running directory while the script is running.
                   This is unsafe when running multiple scripts at once.
     :returns: A script object. It script starts running when you call start() on it,
               or await it.
     """
-    def _execute(ctx, module_dict):
+    def _execute(ctx, module):
         with ctx:
-            runpy.run_path(str(script), module_dict, "__vapoursynth__")
+            runpy.run_path(str(script), module.__dict__, module.__name__)
 
-    return _load(_execute, environment, inline=inline, chdir=chdir)
+    return _load(_execute, environment, module_name=module_name, inline=inline, chdir=chdir)
 
 
-def code(
-        script: t.Union[str,bytes,ast.AST,types.CodeType],
-        environment: t.Union[
-                Environment,
-                ManagedEnvironment,
-                Policy,
-                Script,
-                None
-        ] = None,
+def run(
+        func: t.Callable[[types.ModuleType], None],
+        environment: t.Optional[EnvironmentType]=None,
         *,
+        module_name: str = "__vapoursynth__",
         inline: bool=True,
         chdir: t.Optional[os.PathLike] = None
 ) -> Script:
     """
-    Runs the given code.
+    Runs the given function as if it were a vapoursynth script.
 
     :param path: If path is a path, the interpreter will run the file behind that path.
                  Otherwise it will execute it itself.
@@ -240,13 +236,46 @@ def code(
                         can be acessed using the environment attribute. If the environment
                         is another Script, it will take the environment and module of the
                         script.
+    :param module_name: The name the module should get. Defaults to __vapoursynth__.
     :param inline: Run the code inline, e.g. not in a separate thread.
     :param chdir: Change the currently running directory while the script is running.
                   This is unsafe when running multiple scripts at once.
     :returns: A script object. It script starts running when you call start() on it,
               or await it.
     """
-    def _execute(ctx, module_dict):
+    def _execute(ctx, module):
+        with ctx:
+            func(module)
+
+    return _load(_execute, environment, module_name=module_name, inline=inline, chdir=chdir)
+
+
+def code(
+        script: t.Union[str,bytes,ast.AST,types.CodeType],
+        environment: t.Optional[EnvironmentType]=None,
+        *,
+        module_name: str = "__vapoursynth__",
+        inline: bool=True,
+        chdir: t.Optional[os.PathLike] = None
+) -> Script:
+    """
+    Runs the given code snippet.
+
+    :param path: If path is a path, the interpreter will run the file behind that path.
+                 Otherwise it will execute it itself.
+    :param environment: Defines the environment in which the code should run. If passed
+                        a Policy, it will create a new environment from the policy, which
+                        can be acessed using the environment attribute. If the environment
+                        is another Script, it will take the environment and module of the
+                        script.
+    :param module_name: The name the module should get. Defaults to __vapoursynth__.
+    :param inline: Run the code inline, e.g. not in a separate thread.
+    :param chdir: Change the currently running directory while the script is running.
+                  This is unsafe when running multiple scripts at once.
+    :returns: A script object. It script starts running when you call start() on it,
+              or await it.
+    """
+    def _execute(ctx, module):
         with ctx:
             if isinstance(script, types.CodeType):
                 code = script
@@ -258,20 +287,15 @@ def code(
                     flags=0,
                     mode="exec"
                 )
-            exec(code, module_dict, module_dict)
-    return _load(_execute, environment, inline=inline, chdir=chdir)
+            exec(code, module.__dict__, module.__dict__)
+    return _load(_execute, environment, module_name=module_name, inline=inline, chdir=chdir)
 
 
 def _load(
         script: Executor,
-        environment: t.Union[
-                Environment,
-                ManagedEnvironment,
-                Policy,
-                Script,
-                None
-        ] = None,
+        environment: t.Optional[EnvironmentType]=None,
         *,
+        module_name: str = "__vapoursynth__",
         inline: bool=True,
         chdir: t.Optional[os.PathLike] = None
 ) -> Script:
@@ -280,20 +304,20 @@ def _load(
     else:
         runner = to_thread
 
-    previous_module = None
-    if isinstance(environment, Policy):
-        environment = environment.new_environment()
-    elif isinstance(environment, Script):
-        previous_module = environment.module
+    if isinstance(environment, Script):
+        module = environment.module
+    else:
+        module = types.ModuleType(module_name)
+
+    if isinstance(environment, Script):
         environment = environment.environment
+    elif isinstance(environment, Policy):
+        environment = environment.new_environment()
     elif environment is None:
         environment = get_current_environment()
 
     if chdir is not None:
         runner = chdir_runner(chdir, runner)
 
-    result = Script(script, environment, runner)
-    if previous_module is not None:
-        result.module = previous_module
-    return result
+    return Script(script, module, environment, runner)
 

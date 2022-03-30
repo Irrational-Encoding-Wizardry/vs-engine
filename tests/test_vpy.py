@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import ast
-import asyncio
+import types
 import unittest
 import textwrap
 import threading
@@ -27,7 +27,7 @@ from vsengine._testutils import forcefully_unregister_policy
 from vsengine._testutils import BLACKBOARD, wrap_test_for_asyncio
 from vsengine.policy import Policy, GlobalStore
 from vsengine.loops import NO_LOOP, set_loop
-from vsengine.vpy import Script, script, code, chdir_runner, _load
+from vsengine.vpy import Script, script, code, run, chdir_runner, _load
 from vsengine.vpy import inline_runner, ExecutionFailed, WrapAllErrors
 
 
@@ -68,7 +68,7 @@ class ScriptTest(unittest.TestCase):
 
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                script = Script(test_code, env.vs_environment, inline_runner)
+                script = Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
                 script.run()
         self.assertTrue(run)
 
@@ -79,7 +79,7 @@ class ScriptTest(unittest.TestCase):
 
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                script = Script(test_code, env.vs_environment, inline_runner)
+                script = Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
                 fut = script.run()
                 self.assertIsInstance(fut.exception(), ExecutionFailed)
                 self.assertIsInstance(fut.exception().parent_error, TestException)
@@ -93,7 +93,7 @@ class ScriptTest(unittest.TestCase):
 
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                script = Script(test_code, env.vs_environment, inline_runner)
+                script = Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
                 script.result()
         self.assertTrue(run)
 
@@ -104,7 +104,7 @@ class ScriptTest(unittest.TestCase):
 
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                script = Script(test_code, env.vs_environment, inline_runner)
+                script = Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
                 try:
                     script.result()
                 except ExecutionFailed as err:
@@ -124,7 +124,7 @@ class ScriptTest(unittest.TestCase):
 
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                script = Script(test_code, env.vs_environment, inline_runner)
+                script = Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
                 await script.run_async()
         self.assertTrue(run)
 
@@ -138,7 +138,7 @@ class ScriptTest(unittest.TestCase):
 
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                await Script(test_code, env.vs_environment, inline_runner)
+                await Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
         self.assertTrue(run)
 
     def test_cant_dispose_non_managed_environments(self):
@@ -147,7 +147,7 @@ class ScriptTest(unittest.TestCase):
             pass
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                script = Script(test_code, env.vs_environment, inline_runner)
+                script = Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
                 with self.assertRaises(ValueError):
                     script.dispose()
 
@@ -157,7 +157,7 @@ class ScriptTest(unittest.TestCase):
             pass
         with Policy(GlobalStore()) as p:
             env = p.new_environment()
-            script = Script(test_code, env, inline_runner)
+            script = Script(test_code, types.ModuleType("__test__"), env, inline_runner)
 
             try:
                 script.dispose()
@@ -171,7 +171,7 @@ class ScriptTest(unittest.TestCase):
             pass
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
-                with Script(test_code, env.vs_environment, inline_runner) as s:
+                with Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner) as s:
                     pass
                 self.assertFalse(env.disposed)
 
@@ -181,7 +181,7 @@ class ScriptTest(unittest.TestCase):
             pass
         with Policy(GlobalStore()) as p:
             env = p.new_environment()
-            with Script(test_code, env, inline_runner):
+            with Script(test_code, types.ModuleType("__test__"), env, inline_runner):
                 pass
             try:
                 self.assertTrue(env.disposed)
@@ -241,12 +241,12 @@ class ScriptTest(unittest.TestCase):
     def test_load_chains_script(self):
         @callback_script
         def test_code_1(module):
-            self.assertFalse("test" in module)
-            module["test"] = True
+            self.assertFalse(hasattr(module, "test"))
+            module.test = True
 
         @callback_script
         def test_code_2(module):
-            self.assertEqual(module["test"], True)
+            self.assertEqual(module.test, True)
 
         with Policy(GlobalStore()) as p:
             script1 = _load(test_code_1, p, inline=True, chdir=None)
@@ -257,6 +257,28 @@ class ScriptTest(unittest.TestCase):
                 script2.result()
             finally:
                 env.dispose()
+
+    def test_load_with_custom_name(self):
+        @callback_script
+        def test_code_1(module):
+            self.assertEqual(module.__name__, "__test_1__")
+
+        @callback_script
+        def test_code_2(module):
+            self.assertEqual(module.__name__, "__test_2__")
+
+        with Policy(GlobalStore()) as p:
+            try:
+                script1 = _load(test_code_1, p, module_name="__test_1__")
+                script1.result()
+            finally:
+                script1.dispose()
+
+            try:
+                script2 = _load(test_code_2, p, module_name="__test_2__")
+                script2.result()
+            finally:
+                script2.dispose()
 
     def test_load_runs_chdir(self):
         curdir = None
@@ -337,11 +359,31 @@ class ScriptTest(unittest.TestCase):
                     self.assertEqual(BLACKBOARD.get("vpy_test_runs_raw_code_ast"), True)
 
     def test_script_runs(self):
+        BLACKBOARD.clear()
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
                 with env.use():
                     script(PATH).result()
                     self.assertEqual(BLACKBOARD.get("vpy_run_script"), True)
+
+    def test_script_runs_with_custom_name(self):
+        BLACKBOARD.clear()
+        with Policy(GlobalStore()) as p:
+            with p.new_environment() as env:
+                with env.use():
+                    script(PATH, module_name="__test__").result()
+                    self.assertEqual(BLACKBOARD.get("vpy_run_script_name"), "__test__")
+
+    def test_run_calls_callback(self):
+        def _cb(module):
+            BLACKBOARD["vpy_run_cb"] = True
+
+        with Policy(GlobalStore()) as p:
+            with p.new_environment() as env:
+                with env.use():
+                    run(_cb).result()
+                    self.assertEqual(BLACKBOARD.get("vpy_run_cb"), True)
+
 
     def test_wrap_exceptions_wraps_exception(self):
         err = RuntimeError()
