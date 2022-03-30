@@ -25,6 +25,11 @@ jobs:
     needs: tests
     steps:
     - uses: actions/checkout@v2.4.0
+    - name: Set outputs
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+    - name: Check outputs
+      run: echo ${{ steps.vars.outputs.sha_short }}
     - uses: cachix/install-nix-action@v15
       with:
         nix_path: nixpkgs=channel:nixos-unstable
@@ -32,10 +37,14 @@ jobs:
       with:
         name: vs-engine
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - run: |
+        cat pyproject.toml | sed 's/\(version = "\)\(.*\)\("\)/\1\2+${{ steps.vars.outputs.sha_short }}\3/g' > pyproject.toml.tagged
+        mv pyproject.toml.tagged
     - run: nix build -L .#dist
     - run: |
         mkdir dist
         cp result/* dist
+        ls -lAh dist
     - name: Archive distribution
       uses: actions/upload-artifact@v3
       with:
