@@ -123,6 +123,27 @@
           ];
         };
 
+        packages.dist = pkgs.runCommandNoCC "dist" {src = ./.;} (
+          let 
+            envs = builtins.map (v: pkgs."python${v}".pkgs.poetry) py_versions;
+            commands = builtins.map (v: ''
+              rm -rf ./tmp
+              mkdir ./tmp
+              export HOME=./tmp
+              rm -rf dist
+              ${v}/bin/poetry build
+              cp -a dist/* $out
+            '') envs;
+            allCommands = builtins.concatStringsSep "\n" commands;
+          in 
+          ''
+          mkdir $out
+          cp -a $src/* .
+          ls -lAh
+          ${allCommands}
+          ''
+        );
+
         checks = builtins.listToAttrs (map (v: {
           name = "py${v.py_versions}_vs${toString v.vs_versions}";
           value = makeTest v.vs_versions v.py_versions;
