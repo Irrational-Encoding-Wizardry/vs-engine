@@ -75,14 +75,6 @@ optional = true
 python-versions = "*"
 
 [[package]]
-name = "timeout-decorator"
-version = "0.5.0"
-description = "Timeout decorator"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "trio"
 version = "0.20.0"
 description = "A friendly Python library for async concurrency and I/O"
@@ -113,7 +105,7 @@ trio = ["trio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "4b5fb549c97d3c6ba6d86b48e06120d08a3f8ff75064cfae4a307bfc79131a9f"
+content-hash = "f8d9f25cff2a709bee518a35cb5323306f31d0b0dbaafad5de138d3390c2edbf"
 
 [metadata.files]
 async-generator = [
@@ -195,9 +187,6 @@ sniffio = [
 sortedcontainers = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
     {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
-]
-timeout-decorator = [
-    {file = "timeout-decorator-0.5.0.tar.gz", hash = "sha256:6a2f2f58db1c5b24a2cc79de6345760377ad8bdc13813f5265f6c3e63d16b3d7"},
 ]
 trio = [
     {file = "trio-0.20.0-py3-none-any.whl", hash = "sha256:fb2d48e4eab0dfb786a472cd514aaadc71e3445b203bc300bad93daa75d77c1a"},
