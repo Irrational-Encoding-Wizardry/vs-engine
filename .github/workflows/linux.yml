@@ -19,7 +19,6 @@ jobs:
         name: vs-engine
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: nix build -L .#checks.x86_64-linux.py${{ matrix.py }}_vs${{ matrix.vs }}
-      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
   build:
     runs-on: ubuntu-latest
