@@ -1,4 +1,4 @@
-name: "Test Linux"
+name: ""
 on:
   pull_request:
   push:
@@ -19,3 +19,10 @@ jobs:
         name: vs-engine
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: nix build -L .#checks.x86_64-linux.py${{ matrix.py }}_vs${{ matrix.vs }}
+    - run: nix build -L .#dist
+    - name: Archive distribution
+      uses: actions/upload-artifact@v3
+      with:
+        name: Packages
+        path: |
+          result/**/*
