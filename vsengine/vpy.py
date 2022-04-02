@@ -59,6 +59,7 @@ from vapoursynth import Environment, get_current_environment
 
 from vsengine.loops import to_thread, make_awaitable
 from vsengine.policy import Policy, ManagedEnvironment
+from vsengine._futures import unified, UnifiedFuture
 
 
 T = t.TypeVar("T")
@@ -140,14 +141,19 @@ class Script:
         self.module = module
         self._future = None
 
-    def _run_inline(self):
+    def _run_inline(self) -> 'Script':
         with self.environment.use():
             self.what(WrapAllErrors(), self.module)
+        return self
 
     ###
     # Public API
 
-    def run(self) -> Future[None]:
+    @unified()
+    def get_variable(self, name: str, default: t.Optional[str]=None) -> Future[t.Optional[str]]:
+        return UnifiedFuture.resolve(getattr(self.module, name, default))
+
+    def run(self) -> Future['Script']:
         """
         Runs the script.
 
@@ -158,7 +164,7 @@ class Script:
             self._future = self.runner(self._run_inline)
         return self._future
 
-    def result(self) -> None:
+    def result(self) -> 'Script':
         """
         Runs the script and blocks until the script has finished running.
         """

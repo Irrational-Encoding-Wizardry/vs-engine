@@ -97,6 +97,16 @@ class ScriptTest(unittest.TestCase):
                 script.result()
         self.assertTrue(run)
 
+    def test_execute_resolves_to_script(self):
+        @callback_script
+        def test_code(_):
+            pass
+
+        with Policy(GlobalStore()) as p:
+            with p.new_environment() as env:
+                script = Script(test_code, types.ModuleType("__test__"), env.vs_environment, inline_runner)
+                self.assertIs(script.result(), script)
+
     def test_execute_resolves_immediately_when_raising(self):
         @callback_script
         def test_code(_):
