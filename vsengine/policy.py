@@ -222,14 +222,14 @@ class _ManagedPolicy(EnvironmentPolicy):
                 return
 
             if current_environment() is None:
-                logger.warn(f"Got dead environment: {current_environment()!r}")
+                logger.warning(f"Got dead environment: {current_environment()!r}")
                 self._store.set_current_environment(None)
                 return None
 
             received_environment = current_environment()
 
             if not self.is_alive(received_environment):
-                logger.warn(f"Got dead environment: {received_environment!r}")
+                logger.warning(f"Got dead environment: {received_environment!r}")
                 # Remove the environment.
                 self._store.set_current_environment(None)
                 return None
@@ -239,7 +239,7 @@ class _ManagedPolicy(EnvironmentPolicy):
     def set_environment(self, environment: EnvironmentData) -> None:
         with self._mutex:
             if not self.is_alive(environment):
-                logger.warn(f"Got dead environment: {environment!r}")
+                logger.warning(f"Got dead environment: {environment!r}")
                 self._store.set_current_environment(None)
             else:
                 logger.debug(f"Setting environment: {environment!r}")

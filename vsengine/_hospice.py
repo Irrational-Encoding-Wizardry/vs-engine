@@ -48,7 +48,7 @@ def _collectstage1(phase, __):
     with lock:
         for ident in tuple(stage1):
             if _is_core_still_used(ident):
-                logger.warn(f"Core is still in use. ID:{ident}")
+                logger.warning(f"Core is still in use. ID:{ident}")
                 continue
 
             stage1.remove(ident)
