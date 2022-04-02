@@ -26,19 +26,27 @@
 
   outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }@releases:
     let
-      default_python = "310";
+      # Default versions for development.
+      defaults = {
+        python = "310";
+        vapoursynth = "latest";
+      };
 
-      latest_is_version = 58;
-      py_versions = [ "39" "310" ];
-      vs_versions = [ 57 "latest" ];
+      # Supported versions
+      versions = {
+        python = [ "39" "310" ];
+        vapoursynth = [ 57 "latest" ];
+      };
 
+      # Version-Numbers for versions like "latest"
+      aliases = {
+        vapoursynth = {
+          latest = 58;
+        };
+      };
+
+      ## Versions
       module = pkgs: vapoursynth: ps: ps.buildPythonPackage rec {
-        pname = "vsengine";
-        version = "r0.1.0";
-        pversion = pkgs.lib.removePrefix "r" version;
-        format = "pyproject";
-        src = ./.;
-        buildInputs = [ ps.poetry ps.setuptools vapoursynth ps.trio ps.timeout-decorator ];
       };
     in
     {
@@ -70,9 +78,9 @@
             vapoursynth = (pkgs.vapoursynth.overrideAttrs (old: {
               # Do not override default python.
               # We are rebuilding the python module regardless, so there
-              # is no need to recompile the vapoursnyht module.
+              # is no need to recompile the vapoursynth module.
               src = sources.vs;
-              version = "r" + toString (if release == "latest" then latest_is_version else release) + "";
+              version = "r" + toString (if (builtins.hasAttr (toString release) aliases.vapoursynth) then aliases.vapoursynth."${release}" else release) + "";
               configureFlags = "--disable-python-module" + (if old ? configureFlags then old.configureFlags else "");
             })).override { zimg = zimg; };
           in
@@ -84,69 +92,70 @@
             checkPhase = "true";
           };
 
-        env = release: python: pkgs.poetry2nix.mkPoetryEnv {
-          inherit python;
+        flib = import ./nix/lib pkgs;
 
-          projectDir = ./.;
-          overrides = pkgs.poetry2nix.overrides.withDefaults (self: super: {
-            vapoursynth = makeVapourSynthPackage release self;
-          });
-          extraPackages = (ps: [
-            ps.ipython
-          ]);
-        };
-
-        makeTest = vapoursynth: py_version: pkgs.runCommand "test_py${toString py_version}_vs${toString vapoursynth}_run" {} (
-          let 
-            python = pkgs."python${py_version}";
-            moduleVs = makeVapourSynthPackage vapoursynth;
-            py = python.withPackages (ps: with ps; [
-              (module pkgs (moduleVs ps) ps)
-              (moduleVs ps)
-
-              trio
-              timeout-decorator
-            ]);
-          in 
-          ''
-            touch $out
-            ${pkgs.coreutils}/bin/timeout 30 ${py}/bin/python -m unittest discover -v -s ${./tests}
-          ''
-        );
+        matrix = (flib.version-builders versions defaults).map-versions (versions: rec {
+          python = pkgs."python${versions.python}";
+          vapoursynth = makeVapourSynthPackage versions.vapoursynth python.pkgs;
+          build-name = prefix: flib.versions-to-name prefix versions;
+        });
       in
-      {
-        devShell = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            pkgs."python${default_python}".pkgs.poetry
-            poetry2nix
-            (env 57 pkgs."python${default_python}")
-          ];
-        };
-
-        packages.dist = pkgs.runCommandNoCC "dist" {src = ./.;} (
-          let 
-            envs = builtins.map (v: pkgs."python${v}".pkgs.poetry) py_versions;
-            commands = builtins.map (v: ''
-              rm -rf ./tmp
-              mkdir ./tmp
-              export HOME=./tmp
-              rm -rf dist
-              ${v}/bin/poetry build
-              cp -a dist/* $out
-            '') envs;
-            allCommands = builtins.concatStringsSep "\n" commands;
+      rec {
+        packages =
+          let
+            package-matrix = matrix.build-with-default "vsengine"
+              (versions: versions.python.pkgs.buildPythonPackage rec {
+                pname = "vsengine";
+                pversion = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
+                version = "r${pkgs.lib.replaceStrings ["+"] ["_"] pversion}";
+                format = "flit";
+                src = ./.;
+                propagatedBuildInputs = let ps = versions.python.pkgs; in [ 
+                  ps.trio ps.setuptools versions.vapoursynth 
+                ];
+              });
           in 
-          ''
-          mkdir $out
-          cp -a $src/* .
-          ls -lAh
-          ${allCommands}
-          ''
-        );
+          package-matrix // {
+            dist = pkgs.runCommandNoCC "dist" {
+                FLIT_NO_NETWORK="1";
+                SOURCE_DATE_EPOCH = "0";
+                src = ./.;
+            } (
+              let
+                versions = map (version-map: ''
+                  ${version-map.python.pkgs.flit}/bin/flit build
+                '') matrix.passed-versions;
+                script = builtins.concatStringsSep "\n" versions;
+              in
+              ''
+                mkdir $out
+                cp -r $src/* .
+                ${script}
+                cp dist/* $out
+              ''
+            );
+          };
 
-        checks = builtins.listToAttrs (map (v: {
-          name = "py${v.py_versions}_vs${toString v.vs_versions}";
-          value = makeTest v.vs_versions v.py_versions;
-        }) (pkgs.lib.cartesianProductOfSets { inherit py_versions vs_versions; }));
+        # Build shells with each vapoursynth-version / python-tuple
+        devShells = matrix.build-with-default "devShell"
+          (versions: pkgs.mkShell {
+            buildInputs = [
+              (versions.python.withPackages (ps: [
+                ps.flit
+                ps.trio
+                versions.vapoursynth
+              ]))
+            ];
+          });
+
+        checks = matrix.build "check"
+          (versions: pkgs.runCommandNoCC (versions.build-name "check") {} 
+            (let py = versions.python.withPackages (ps: [packages.${versions.build-name "vsengine"}]); in ''
+              ${py}/bin/python -m unittest discover -s ${./tests} -v > $out
+            ''));
+
+        # Compat with nix<2.7
+        devShell = devShells.default;
+        defaultPackage = packages.default;
       }));
 }
