@@ -34,7 +34,7 @@
 
       module = pkgs: vapoursynth: ps: ps.buildPythonPackage rec {
         pname = "vsengine";
-        version = "r" + (pkgs.lib.strings.sanitizeDerivationName (builtins.readFile ./VERSION));
+        version = "r0.1.0";
         pversion = pkgs.lib.removePrefix "r" version;
         format = "pyproject";
         src = ./.;
