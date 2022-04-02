@@ -47,6 +47,8 @@ A Script-instance is awaitable, in which it will await the completion of the
 script.
 """
 import typing as t
+import traceback
+import textwrap
 import runpy
 import types
 import ast
@@ -75,9 +77,15 @@ class ExecutionFailed(Exception):
     parent_error: BaseException
 
     def __init__(self, parent_error: BaseException):
-        super().__init__("Running the script has failed")
+        msg = textwrap.indent(self.extract_traceback(parent_error), "| ")
+        super().__init__(f"An exception was raised while running the script.\n{msg}")
         self.parent_error = parent_error
 
+    @staticmethod
+    def extract_traceback(error: BaseException) -> str:
+        msg = traceback.format_exception(type(error), error, error.__traceback__)
+        msg = "".join(msg)
+        return msg
 
 class WrapAllErrors:
 
