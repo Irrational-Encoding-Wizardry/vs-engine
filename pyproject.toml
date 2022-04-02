@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vsengine"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "An engine for our vapoursynth previewers"
 authors = ["Sarah <cid+git@cid-chan.moe>"]
 license = "AGPL-3.0-or-later"
