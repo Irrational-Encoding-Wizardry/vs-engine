@@ -67,7 +67,7 @@ Executor = t.Callable[[t.ContextManager[None], types.ModuleType], None]
 
 
 __all__ = [
-    "ExecutionFailed", "script", "code", "run"
+    "ExecutionFailed", "script", "code", "variables"
 ]
 
 
@@ -226,8 +226,8 @@ def script(
     return _load(_execute, environment, module_name=module_name, inline=inline, chdir=chdir)
 
 
-def run(
-        func: t.Callable[[types.ModuleType], None],
+def variables(
+        variables: t.Mapping[str, str],
         environment: t.Optional[EnvironmentType]=None,
         *,
         module_name: str = "__vapoursynth__",
@@ -235,7 +235,7 @@ def run(
         chdir: t.Optional[os.PathLike] = None
 ) -> Script:
     """
-    Runs the given function as if it were a vapoursynth script.
+    Sets variables to the module.
 
     :param path: If path is a path, the interpreter will run the file behind that path.
                  Otherwise it will execute it itself.
@@ -253,7 +253,8 @@ def run(
     """
     def _execute(ctx, module):
         with ctx:
-            func(module)
+            for k, v in variables.items():
+                setattr(module, k, v)
 
     return _load(_execute, environment, module_name=module_name, inline=inline, chdir=chdir)
 

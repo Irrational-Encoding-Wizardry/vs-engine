@@ -27,7 +27,7 @@ from vsengine._testutils import forcefully_unregister_policy
 from vsengine._testutils import BLACKBOARD, wrap_test_for_asyncio
 from vsengine.policy import Policy, GlobalStore
 from vsengine.loops import NO_LOOP, set_loop
-from vsengine.vpy import Script, script, code, run, chdir_runner, _load
+from vsengine.vpy import Script, script, code, variables, chdir_runner, _load
 from vsengine.vpy import inline_runner, ExecutionFailed, WrapAllErrors
 
 
@@ -374,16 +374,13 @@ class ScriptTest(unittest.TestCase):
                     script(PATH, module_name="__test__").result()
                     self.assertEqual(BLACKBOARD.get("vpy_run_script_name"), "__test__")
 
-    def test_run_calls_callback(self):
-        def _cb(module):
-            BLACKBOARD["vpy_run_cb"] = True
-
+    def test_can_get_and_set_variables(self):
         with Policy(GlobalStore()) as p:
             with p.new_environment() as env:
                 with env.use():
-                    run(_cb).result()
-                    self.assertEqual(BLACKBOARD.get("vpy_run_cb"), True)
-
+                    script = variables({"a": 1})
+                    script.result()
+                    self.assertEqual(script.get_variable("a").result(), 1)
 
     def test_wrap_exceptions_wraps_exception(self):
         err = RuntimeError()
