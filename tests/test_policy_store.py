@@ -5,9 +5,7 @@
 import unittest
 
 import concurrent.futures as futures
-from concurrent.futures.thread import ThreadPoolExecutor
-
-from contextvars import Context, copy_context
+from contextvars import copy_context
 
 from vsengine.policy import GlobalStore, ThreadLocalStore, ContextVarStore 
 from vsengine.policy import EnvironmentStore
