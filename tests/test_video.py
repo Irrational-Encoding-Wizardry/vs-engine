@@ -41,16 +41,16 @@ class TestVideo(unittest.TestCase):
         clip = core.std.Splice([clipA, clipB])
 
         self.assertEqual(planes(clip, 0).result(), [b"\x00", b"\x01", b"\x02"])
-        self.assertEqual(planes(clip, 0, [0]).result(), [b"\x00"])
-        self.assertEqual(planes(clip, 0, [1]).result(), [b"\x01"])
-        self.assertEqual(planes(clip, 0, [2]).result(), [b"\x02"])
-        self.assertEqual(planes(clip, 0, [2, 1, 0]).result(), [b"\x02", b"\x01", b"\x00"])
+        self.assertEqual(planes(clip, 0, planes=[0]).result(), [b"\x00"])
+        self.assertEqual(planes(clip, 0, planes=[1]).result(), [b"\x01"])
+        self.assertEqual(planes(clip, 0, planes=[2]).result(), [b"\x02"])
+        self.assertEqual(planes(clip, 0, planes=[2, 1, 0]).result(), [b"\x02", b"\x01", b"\x00"])
 
         self.assertEqual(planes(clip, 1).result(), [b"\x03", b"\x04", b"\x05"])
-        self.assertEqual(planes(clip, 1, [0]).result(), [b"\x03"])
-        self.assertEqual(planes(clip, 1, [1]).result(), [b"\x04"])
-        self.assertEqual(planes(clip, 1, [2]).result(), [b"\x05"])
-        self.assertEqual(planes(clip, 1, [2, 1, 0]).result(), [b"\x05", b"\x04", b"\x03"])
+        self.assertEqual(planes(clip, 1, planes=[0]).result(), [b"\x03"])
+        self.assertEqual(planes(clip, 1, planes=[1]).result(), [b"\x04"])
+        self.assertEqual(planes(clip, 1, planes=[2]).result(), [b"\x05"])
+        self.assertEqual(planes(clip, 1, planes=[2, 1, 0]).result(), [b"\x05", b"\x04", b"\x03"])
 
     def test_planes_default_supports_multiformat_clips(self):
         clipA = core.std.BlankClip(length=1, color=[0, 1, 2], width=1, height=1, format=RGB24)

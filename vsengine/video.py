@@ -12,14 +12,26 @@ import vapoursynth
 
 from vsengine._futures import unified, UnifiedFuture
 from vsengine._nodes import close_when_needed, buffer_futures
+from vsengine._helpers import use_inline, EnvironmentTypes
 
 @unified()
-def frame(node: vapoursynth.VideoNode, frameno: int) -> Future[vapoursynth.VideoFrame]:
-    return node.get_frame_async(frameno)
+def frame(
+        node: vapoursynth.VideoNode,
+        frameno: int,
+        env: t.Optional[EnvironmentTypes]=None
+) -> Future[vapoursynth.VideoFrame]:
+    with use_inline("frame", env):
+        return node.get_frame_async(frameno)
 
 
 @unified()
-def planes(node: vapoursynth.VideoNode, frameno: int, planes: t.Optional[t.Sequence[int]]=None) -> Future[t.Tuple[bytes, ...]]:
+def planes(
+        node: vapoursynth.VideoNode,
+        frameno: int,
+        env: t.Optional[EnvironmentTypes]=None,
+        *,
+        planes: t.Optional[t.Sequence[int]]=None
+) -> Future[t.Tuple[bytes, ...]]:
     def _extract(frame: vapoursynth.VideoFrame):
         try:
             # This might be a variable format clip.
@@ -31,12 +43,13 @@ def planes(node: vapoursynth.VideoNode, frameno: int, planes: t.Optional[t.Seque
             return [bytes(frame[p]) for p in ps]
         finally:
             frame.close()
-    return frame(node, frameno).map(_extract)
+    return frame(node, frameno, env).map(_extract)
 
 
 @unified(type="generator")
 def frames(
         node: vapoursynth.VideoNode,
+        env: t.Optional[EnvironmentTypes]=None,
         *,
         prefetch: int=0,
         backlog: t.Optional[int]=None,
@@ -46,7 +59,10 @@ def frames(
         # can just do the right thing from the beginning.
         close: bool=True
 ) -> t.Iterable[Future[vapoursynth.VideoFrame]]:
-    it = (node.get_frame_async(n) for n in range(len(node)))
+    with use_inline("frames", env):
+        length = len(node)
+
+    it = (frame(node, n, env) for n in range(length))
 
     # If backlog is zero, skip.
     if backlog is None or backlog > 0:
@@ -59,6 +75,7 @@ def frames(
 @unified(type="generator")
 def render(
         node: vapoursynth.VideoNode,
+        env: t.Optional[int]=None,
         *,
         prefetch: int=0,
         backlog: t.Optional[int]=0,
@@ -116,7 +133,7 @@ def render(
 
         return current_frame, b"".join(buf)
 
-    for frame, fut in enumerate(frames(node, prefetch=prefetch, backlog=backlog).futures, 1):
+    for frame, fut in enumerate(frames(node, env, prefetch=prefetch, backlog=backlog).futures, 1):
         current_frame = frame
         yield UnifiedFuture.from_future(fut).map(render_single_frame)
         
