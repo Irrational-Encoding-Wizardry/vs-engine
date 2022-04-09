@@ -1,14 +1,11 @@
 [project]
 name = "vsengine"
-version = "0.1.0a1"
+version = "0.1.0a1+dirty"
 license = { file = "COPYING" }
 readme = "README.md"
 authors = [
     { name = "cid-chan", email ="cid+git@cid-chan.moe" }
 ]
-# packages = [
-#   { include = "vsengine" },
-# ]
 dynamic = ["description"]
 requires-python = ">=3.9"
 

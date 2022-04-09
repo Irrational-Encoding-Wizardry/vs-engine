@@ -1,8 +1,5 @@
 {
-  description = "Application packaged using poetry2nix";
-
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.poetry2nix.url = "github:nix-community/poetry2nix";
 
   # VS latest
   inputs.vs_latest_vs = {
@@ -24,7 +21,7 @@
     flake = false;
   };
 
-  outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }@releases:
+  outputs = { self, nixpkgs, flake-utils,  ... }@releases:
     let
       # Default versions for development.
       defaults = {
@@ -134,6 +131,15 @@
                 cp dist/* $out
               ''
             );
+
+            docs = pkgs.runCommandNoCC "docs" {
+              src = ./.;
+              nativeBuildInputs = [ (pkgs."python${defaults.python}".pkgs.mkdocs) ];
+            } ''
+              mkdir $out
+              mkdocs build
+              cp -a site/* $out
+            '';
           };
 
         # Build shells with each vapoursynth-version / python-tuple
@@ -145,13 +151,18 @@
                 ps.trio
                 versions.vapoursynth
               ]))
+
+              (versions.python.withPackages (ps: [
+                ps.mkdocs
+              ]))
             ];
           });
 
         checks = matrix.build "check"
           (versions: pkgs.runCommandNoCC (versions.build-name "check") {} 
             (let py = versions.python.withPackages (ps: [packages.${versions.build-name "vsengine"}]); in ''
-              ${py}/bin/python -m unittest discover -s ${./tests} -v > $out
+              ${py}/bin/python -m unittest discover -s ${./tests} -v 
+              touch $out
             ''));
 
         # Compat with nix<2.7
