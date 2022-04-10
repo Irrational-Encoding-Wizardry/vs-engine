@@ -23,7 +23,7 @@ def use_inline(function_name: str, env: t.Optional[EnvironmentTypes]) -> t.Gener
         try:
             vs.get_current_environment()
         except Exception as e:
-            raise RuntimeError(
+            raise EnvironmentError(
                 f"You are currently not running within an environment. "
                 f"Pass the environment directly to {function_name}."
             ) from e
@@ -46,7 +46,7 @@ def wrap_variable_size(
 ) -> vs.VideoNode:
     # Check: This is not a variable format clip.
     #        Nothing needs to be done.
-    if node.format is not None and node.width is not None and node.height is not None:
+    if node.format is not None and node.width != 0 and node.height != 0:
         return func(node)
 
     _node_cache = {}
@@ -57,7 +57,7 @@ def wrap_variable_size(
 
     def _assume_format(n: int, f: vs.VideoFrame) -> vs.VideoNode:
         nonlocal _node_cache
-        selector = (node.format, node.width, node.height)
+        selector = (int(f.format), f.width, f.height)
 
         if _node_cache is None or len(_node_cache) > 100:
             # Skip caching if the cahce grows too large.

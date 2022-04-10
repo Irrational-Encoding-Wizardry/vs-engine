@@ -1,0 +1,402 @@
+[
+   {
+    "matrix": "BT.2020 non-constant",
+    "width": "3840",
+    "height": "2076",
+    "primaries": "BT.2020",
+    "transfer": "PQ",
+    "chromaloc": "Type 2"
+  },
+  {
+    "matrix": "BT.709",
+    "width": "3840",
+    "height": "2076",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "3840",
+    "height": "2160",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.2020 non-constant",
+    "width": "3840",
+    "height": "2160",
+    "primaries": "BT.2020",
+    "transfer": "PQ",
+    "chromaloc": "Type 2"
+  },
+  {
+    "matrix": "BT.2020 non-constant",
+    "width": "3840",
+    "height": "2160",
+    "primaries": "BT.2020",
+    "transfer": "PQ",
+    "chromaloc": "Type 2"
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "800",
+    "height": "448",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.601",
+    "width": "720",
+    "height": "480",
+    "primaries": "BT.601 NTSC",
+    "transfer": "BT.601",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1280",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.601",
+    "width": "720",
+    "height": "576",
+    "primaries": "BT.601 PAL",
+    "transfer": "BT.470 System B/G",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "704",
+    "height": "528",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.601",
+    "width": "720",
+    "height": "480",
+    "primaries": "BT.601 NTSC",
+    "transfer": "BT.601",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1440",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.470 System B/G",
+    "width": "720",
+    "height": "576",
+    "primaries": "BT.601 PAL",
+    "transfer": "BT.470 System B/G",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1920",
+    "height": "1080",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  },
+  {
+    "matrix": "BT.709",
+    "width": "1280",
+    "height": "720",
+    "primaries": "BT.709",
+    "transfer": "BT.709",
+    "chromaloc": null
+  }
+]
