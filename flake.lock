@@ -2,11 +2,11 @@
   "nodes": {
     "flake-utils": {
       "locked": {
-        "lastModified": 1644229661,
-        "narHash": "sha256-1YdnJAsNy69bpcjuoKdOYQX0YxZBiCYZo4Twxerqv7k=",
+        "lastModified": 1649676176,
+        "narHash": "sha256-OWKJratjt2RW151VUlJPRALb7OU2S5s+f0vLj4o1bHM=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "3cecb5b042f7f209c56ffd8371b2711a290ec797",
+        "rev": "a4b154ebbdc88c8498a5c7b01589addc9e9cb678",
         "type": "github"
       },
       "original": {
@@ -17,16 +17,18 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1647350163,
-        "narHash": "sha256-OcMI+PFEHTONthXuEQNddt16Ml7qGvanL3x8QOl2Aao=",
+        "lastModified": 1649986882,
+        "narHash": "sha256-cNsInUFq1MbuvaEmv8x6jetWnmAU+osMpnwKumtjksI=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "3eb07eeafb52bcbf02ce800f032f18d666a9498d",
+        "rev": "5181d5945eda382ff6a9ca3e072ed6ea9b547fee",
         "type": "github"
       },
       "original": {
-        "id": "nixpkgs",
-        "type": "indirect"
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
       }
     },
     "root": {
@@ -35,6 +37,8 @@
         "nixpkgs": "nixpkgs",
         "vs_57_vs": "vs_57_vs",
         "vs_57_zimg": "vs_57_zimg",
+        "vs_58_vs": "vs_58_vs",
+        "vs_58_zimg": "vs_58_zimg",
         "vs_latest_vs": "vs_latest_vs",
         "vs_latest_zimg": "vs_latest_zimg"
       }
@@ -73,14 +77,48 @@
         "type": "github"
       }
     },
+    "vs_58_vs": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1649869847,
+        "narHash": "sha256-LIjNfyfpyvE+Ec6f4aGzRA4ZGoWPFhjtUw4yrenDsUQ=",
+        "owner": "vapoursynth",
+        "repo": "vapoursynth",
+        "rev": "fd31a2d36811b09224aed507b9009011acb6497f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vapoursynth",
+        "ref": "R58",
+        "repo": "vapoursynth",
+        "type": "github"
+      }
+    },
+    "vs_58_zimg": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1647482635,
+        "narHash": "sha256-ANhZ3qt+BMMIXGCIXq4UA0EgSwVuwIAZrgHOQxPpyYA=",
+        "owner": "sekrit-twc",
+        "repo": "zimg",
+        "rev": "dd4c4dff3ce6a2877bd6ba57c1be99759b9cb2da",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sekrit-twc",
+        "ref": "v3.0",
+        "repo": "zimg",
+        "type": "github"
+      }
+    },
     "vs_latest_vs": {
       "flake": false,
       "locked": {
-        "lastModified": 1647771597,
-        "narHash": "sha256-cQuJ/nvAqxverkGPhEkTQoM3pkKXA+fDqFkCv6S1u7Q=",
+        "lastModified": 1649869847,
+        "narHash": "sha256-LIjNfyfpyvE+Ec6f4aGzRA4ZGoWPFhjtUw4yrenDsUQ=",
         "owner": "vapoursynth",
         "repo": "vapoursynth",
-        "rev": "c39bb1772ed662c244bd71b8294394b3407e513b",
+        "rev": "fd31a2d36811b09224aed507b9009011acb6497f",
         "type": "github"
       },
       "original": {

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        vs: ["57", "latest"]
+        vs: ["57", "58", "latest"]
         py: ["39", "310"]
     steps:
     - uses: actions/checkout@v2.4.0

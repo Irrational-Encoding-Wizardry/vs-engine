@@ -1,5 +1,9 @@
 {
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  ####
+  # This is for our test matrix.
 
   # VS latest
   inputs.vs_latest_vs = {
@@ -20,6 +24,14 @@
     url = "github:sekrit-twc/zimg/v3.0";
     flake = false;
   };
+  inputs.vs_58_vs = {
+    url = "github:vapoursynth/vapoursynth/R58";
+    flake = false;
+  };
+  inputs.vs_58_zimg = {
+    url = "github:sekrit-twc/zimg/v3.0";
+    flake = false;
+  };
 
   outputs = { self, nixpkgs, flake-utils,  ... }@releases:
     let
@@ -32,28 +44,23 @@
       # Supported versions
       versions = {
         python = [ "39" "310" ];
-        vapoursynth = [ 57 "latest" ];
+        vapoursynth = [ 58 "latest" ];
       };
 
       # Version-Numbers for versions like "latest"
       aliases = {
         vapoursynth = {
-          latest = 58;
+          latest = 59;
         };
       };
-
-      ## Versions
-      module = pkgs: vapoursynth: ps: ps.buildPythonPackage rec {
-      };
     in
-    {
-
-    } // (flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
+    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
       let
         pkgs = import nixpkgs {
           inherit system;
           config = {
             allowUnsupportedSystem = true;
+            allowBroken = true;
           };
         };
 
@@ -131,15 +138,6 @@
                 cp dist/* $out
               ''
             );
-
-            docs = pkgs.runCommandNoCC "docs" {
-              src = ./.;
-              nativeBuildInputs = [ (pkgs."python${defaults.python}".pkgs.mkdocs) ];
-            } ''
-              mkdir $out
-              mkdocs build
-              cp -a site/* $out
-            '';
           };
 
         # Build shells with each vapoursynth-version / python-tuple
@@ -153,6 +151,7 @@
               ]))
 
               (versions.python.withPackages (ps: [
+                # ps.mkdocs-material
                 ps.mkdocs
               ]))
             ];
@@ -168,5 +167,5 @@
         # Compat with nix<2.7
         devShell = devShells.default;
         defaultPackage = packages.default;
-      }));
+      });
 }
