@@ -44,7 +44,7 @@
       # Supported versions
       versions = {
         python = [ "39" "310" ];
-        vapoursynth = [ 58 "latest" ];
+        vapoursynth = [ 57 58 "latest" ];
       };
 
       # Version-Numbers for versions like "latest"
