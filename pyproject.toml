@@ -1,6 +1,6 @@
 [project]
 name = "vsengine"
-version = "0.1.0a1+dirty"
+version = "0.1.0+dirty"
 license = { file = "COPYING" }
 readme = "README.md"
 authors = [
