@@ -44,13 +44,15 @@ jobs:
     # Replace the dirty-tag with the commit-id.
     - if: "!(github.event_name == 'push' && contains(github.ref, 'refs/tags/'))"
       run: |
-        cat pyproject.toml | sed 's/\(version = "\)\(.*\)\\+dirty\("\)/\1\2.dev0+${{ steps.vars.outputs.sha_short }}\3/g' > pyproject.toml.tagged
+        cat pyproject.toml | sed 's/\(version = "\)\(.*\)+dirty\("\)/\1\2.dev0+${{ steps.vars.outputs.sha_short }}\3/g' > pyproject.toml.tagged
+        cat pyproject.toml.tagged
         mv pyproject.toml.tagged pyproject.toml
 
     # Remove the dirty-tag from the builder.
     - if: "github.event_name == 'push' && contains(github.ref, 'refs/tags/')"
       run: |
-        cat pyproject.toml | sed 's/\(version = "\)\(.*\)\\+dirty\("\)/\1\2\3/g' > pyproject.toml.tagged
+        cat pyproject.toml | sed 's/\(version = "\)\(.*\)+dirty\("\)/\1\2\3/g' > pyproject.toml.tagged
+        cat pyproject.toml.tagged
         mv pyproject.toml.tagged pyproject.toml
 
     # Build the distribution.
