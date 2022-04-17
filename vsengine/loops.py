@@ -48,6 +48,8 @@ class EventLoop:
     def detach(self) -> None:
         """
         Called when another event-loop should take over.
+
+        For example, when you restarting your application.
         """
         ...
 

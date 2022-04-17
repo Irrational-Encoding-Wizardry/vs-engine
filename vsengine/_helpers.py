@@ -49,12 +49,12 @@ def wrap_variable_size(
     if node.format is not None and node.width != 0 and node.height != 0:
         return func(node)
 
-    _node_cache = {}
     def _do_resize(f: vs.VideoFrame) -> vs.VideoNode:
         # Resize the node to make them assume a specific format.
         # As the node should aready have this format, this should be a no-op.
         return func(node.resize.Point(format=f.format, width=f.width, height=f.height))
 
+    _node_cache = {}
     def _assume_format(n: int, f: vs.VideoFrame) -> vs.VideoNode:
         nonlocal _node_cache
         selector = (int(f.format), f.width, f.height)
@@ -75,6 +75,10 @@ def wrap_variable_size(
 
         return wrapped
 
-    evaled = vs.core.std.FrameEval(node, _assume_format, node)
-    return evaled.resize.Point(format=force_assumed_format)
+    # This clip must not become part of the closure,
+    # or otherwise we risk cyclic references.
+    return (
+        node.std.FrameEval(_assume_format, [node], [node])
+        .resize.Point(format=force_assumed_format)
+    )
 
