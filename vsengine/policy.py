@@ -239,7 +239,8 @@ class _ManagedPolicy(EnvironmentPolicy):
                 else:
                     self._store.set_current_environment(weakref.ref(environment))
 
-            return previous_environment()
+            if previous_environment is not None:
+                return previous_environment()
 
 
 class ManagedEnvironment:
