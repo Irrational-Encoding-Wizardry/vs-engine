@@ -38,11 +38,38 @@ jobs:
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: nix build -L .#checks.x86_64-darwin.check-python${{ matrix.py }}-vapoursynth${{ matrix.vs }}
 
+  tests-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        vs: ["57", "58"]
+        arch: ["x64", "x86"]
+        include:
+        - vs: "57"
+          python: "3.9"
+        - vs: "58"
+          python: "3.10"
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - name: Install Python ${{ matrix.python }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: "${{ matrix.python }}"
+        architecture: "${{ matrix.arch }}"
+    - name: Installing dependencies
+      run: |
+        pip install flit
+        flit install --user --pth-file
+    - name: Running Tests
+      run: |
+        python -m unittest discover -s ./tests/
+
   build:
     runs-on: ubuntu-latest
     needs: 
     - tests-linux
     - tests-darwin
+    - tests-windows
     steps:
     # Set-up runner.
     - uses: actions/checkout@v2.4.0
