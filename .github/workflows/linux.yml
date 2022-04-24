@@ -9,6 +9,7 @@ jobs:
       matrix:
         vs: ["57", "58", "latest"]
         py: ["39", "310"]
+        arch: ["i686", "x86_64"]
     steps:
     - uses: actions/checkout@v2.4.0
     - uses: cachix/install-nix-action@v15
@@ -18,7 +19,7 @@ jobs:
       with:
         name: vs-engine
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: nix build -L .#checks.x86_64-linux.check-python${{ matrix.py }}-vapoursynth${{ matrix.vs }}
+    - run: nix build -L .#checks.${{ matrix.arch }}-linux.check-python${{ matrix.py }}-vapoursynth${{ matrix.vs }}
 
   tests-darwin:
     runs-on: macos-latest
