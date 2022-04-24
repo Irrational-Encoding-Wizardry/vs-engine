@@ -227,7 +227,7 @@ class _ManagedPolicy(EnvironmentPolicy):
 
     def set_environment(self, environment: EnvironmentData) -> None:
         with self._mutex:
-            if not self.is_alive(environment):
+            if environment is not None and not self.is_alive(environment):
                 logger.warning(f"Got dead environment: {environment!r}")
                 self._store.set_current_environment(None)
             else:
@@ -300,8 +300,12 @@ class ManagedEnvironment:
         """
         Switches to this environment within a block.
         """
+        prev_environment = self._policy.managed._store.get_current_environment()
         with self._environment.use():
             yield
+
+        # Workaround: On 32bit systems, environment policies do not reset.
+        self._policy.managed.set_environment(prev_environment)
 
     def switch(self):
         """
