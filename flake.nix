@@ -54,7 +54,7 @@
         };
       };
     in
-    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
+    flake-utils.lib.eachSystem [ "x86_64-linux" "x86_64-darwin" ] (system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -64,12 +64,14 @@
           };
         };
 
+        lib = pkgs.lib;
+
         findForRelease = release:
           let
             prefix = "vs_${toString release}_";
-            filtered = pkgs.lib.filterAttrs (k: v: pkgs.lib.hasPrefix prefix k) releases;
+            filtered = lib.filterAttrs (k: v: lib.hasPrefix prefix k) releases;
           in
-          pkgs.lib.mapAttrs' (k: v: { name = pkgs.lib.removePrefix prefix k; value = v; }) filtered;
+          lib.mapAttrs' (k: v: { name = lib.removePrefix prefix k; value = v; }) filtered;
 
         makeVapourSynthPackage = release: ps: 
           let
@@ -85,13 +87,21 @@
               # is no need to recompile the vapoursynth module.
               src = sources.vs;
               version = "r" + toString (if (builtins.hasAttr (toString release) aliases.vapoursynth) then aliases.vapoursynth."${release}" else release) + "";
-              configureFlags = "--disable-python-module" + (if old ? configureFlags then old.configureFlags else "");
+              configureFlags = "--disable-python-module" + (lib.optionalString (old ? configureFlags) old.configureFlags);
+              preConfigure = ''
+                ${# Darwin requires special ld-flags to compile with the patch that implements vapoursynth.withPlugins.
+                  # we 
+                  lib.optionalString (pkgs.stdenv.isDarwin) ''
+                  export LDFLAGS="-Wl,U,_VSLoadPluginsNix''${LDFLAGS:+ ''${LDFLAGS}}"
+                ''}
+                ${lib.optionalString (old ? preConfigure) old.preConfigure}
+              '';
             })).override { zimg = zimg; };
           in
           ps.buildPythonPackage {
             pname = "vapoursynth";
             inherit (vapoursynth) src version;
-            pversion = pkgs.lib.removePrefix "r" vapoursynth.version;
+            pversion = lib.removePrefix "r" vapoursynth.version;
             buildInputs = [ ps.cython vapoursynth ];
             checkPhase = "true";
           };
@@ -111,7 +121,7 @@
               (versions: versions.python.pkgs.buildPythonPackage rec {
                 pname = "vsengine";
                 pversion = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
-                version = "r${pkgs.lib.replaceStrings ["+"] ["_"] pversion}";
+                version = "r${lib.replaceStrings ["+"] ["_"] pversion}";
                 format = "flit";
                 src = ./.;
                 propagatedBuildInputs = let ps = versions.python.pkgs; in [ 
