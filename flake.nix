@@ -90,9 +90,8 @@
               configureFlags = "--disable-python-module" + (lib.optionalString (old ? configureFlags) old.configureFlags);
               preConfigure = ''
                 ${# Darwin requires special ld-flags to compile with the patch that implements vapoursynth.withPlugins.
-                  # we 
                   lib.optionalString (pkgs.stdenv.isDarwin) ''
-                  export LDFLAGS="-Wl,U,_VSLoadPluginsNix''${LDFLAGS:+ ''${LDFLAGS}}"
+                  export LDFLAGS="-Wl,-U,_VSLoadPluginsNix''${LDFLAGS:+ ''${LDFLAGS}}"
                 ''}
                 ${lib.optionalString (old ? preConfigure) old.preConfigure}
               '';
