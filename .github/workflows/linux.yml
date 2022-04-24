@@ -59,6 +59,7 @@ jobs:
     - name: Installing dependencies
       run: |
         pip install flit
+        pip install vapoursynth==${{ matrix.vs }} vapoursynth_portable==${{ matrix.vs }}
         flit install --user --pth-file
     - name: Running Tests
       run: |
