@@ -225,8 +225,10 @@ class _ManagedPolicy(EnvironmentPolicy):
 
             return t.cast(EnvironmentData, received_environment)
 
-    def set_environment(self, environment: EnvironmentData) -> None:
+    def set_environment(self, environment: EnvironmentData) -> t.Optional[EnvironmentData]:
         with self._mutex:
+            previous_environment = self._store.get_current_environment()
+
             if environment is not None and not self.is_alive(environment):
                 logger.warning(f"Got dead environment: {environment!r}")
                 self._store.set_current_environment(None)
@@ -236,6 +238,8 @@ class _ManagedPolicy(EnvironmentPolicy):
                     self._store.set_current_environment(None)
                 else:
                     self._store.set_current_environment(weakref.ref(environment))
+
+            return previous_environment()
 
 
 class ManagedEnvironment:
