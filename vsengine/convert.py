@@ -83,7 +83,10 @@ def _convert_yuv(
     # Keep bitdepth so we can dither futher down in the RGB part.
     return resizer(
         c,
-        format=real_rgb24.replace(bits_per_sample=c.format.bits_per_sample),
+        format=real_rgb24.replace(
+            sample_type=c.format.sample_type,
+            bits_per_sample=c.format.bits_per_sample
+        ),
         **args
     )
 
@@ -107,7 +110,7 @@ def _actually_resize(
         c = c.std.RemoveFrameProps("_Matrix")
 
     # Actually perform the format conversion on a non-subsampled clip.
-    if c.format.color_family != vs.RGB or c.format.bits_per_sample != target_rgb.bits_per_sample:
+    if c.format.color_family != vs.RGB or c.format.sample_type != vs.INTEGER or c.format.bits_per_sample != target_rgb.bits_per_sample:
         c = core.resize.Point(
             c,
             format=target_rgb
