@@ -87,7 +87,7 @@
               # is no need to recompile the vapoursynth module.
               src = sources.vs;
               version = "r" + toString (if (builtins.hasAttr (toString release) aliases.vapoursynth) then aliases.vapoursynth."${release}" else release) + "";
-              configureFlags = "--disable-python-module" + (lib.optionalString (old ? configureFlags) old.configureFlags);
+              configureFlags = [ "--disable-python-module" ] ++ (if (old ? configureFlags) then old.configureFlags else []);
               preConfigure = ''
                 ${# Darwin requires special ld-flags to compile with the patch that implements vapoursynth.withPlugins.
                   lib.optionalString (pkgs.stdenv.isDarwin) ''
