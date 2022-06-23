@@ -133,5 +133,5 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
         TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
       run: |
-        twine upload *
+        twine upload dist/*
 
