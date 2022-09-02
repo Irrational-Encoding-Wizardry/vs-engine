@@ -19,11 +19,11 @@ def run_fixture(fixture: str, expect_status: int = 0):
         path += os.pathsep + os.path.abspath(os.path.join(".."))
 
     # Find addtional path directories.
-    if platform.system() == "Windows":
-        path += os.pathsep + os.path.dirname(platform.__file__)
-        path += os.pathsep + os.path.dirname(os.path.dirname(vsengine.unittest.__file__))
+    # if platform.system() == "Windows":
+    #     path += os.pathsep + os.path.dirname(platform.__file__)
+    #     path += os.pathsep + os.path.dirname(os.path.dirname(vsengine.unittest.__file__))
 
-    env = {"PYTHONPATH" : path}
+    env = {**os.environ, "PYTHONPATH" : path}
 
     process = subprocess.run(
         [sys.executable, "-m", "vsengine.unittest", fixture],
