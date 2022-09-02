@@ -1,5 +1,6 @@
 import os
 import sys
+import platform
 import unittest
 import subprocess
 
@@ -9,21 +10,21 @@ PATH = os.path.join(DIR, "fixtures")
 
 
 def run_fixture(fixture: str, expect_status: int = 0):
-    path = os.path.join(PATH)
-    if "PYTHONPATH" in os.environ:
-        path += os.pathsep + os.environ["PYTHONPATH"]
+    if platform.system() != "Windows":
+        path = os.path.join(PATH)
+        if "PYTHONPATH" in os.environ:
+            path += os.pathsep + os.environ["PYTHONPATH"]
+        else:
+            path += os.pathsep + os.path.abspath(os.path.join(".."))
+        env = {"PYTHONPATH" : path}
     else:
-        path += os.pathsep + os.path.abspath(os.path.join(".."))
-
-    print(repr(path), file=sys.stderr)
+        env = {}
 
     process = subprocess.run(
         [sys.executable, "-m", "vsengine.unittest", fixture],
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
-        env={
-            "PYTHONPATH": path
-        }
+        env=env
     )
     if process.returncode != expect_status:
         print(process.stdout.decode(sys.getdefaultencoding()), file=sys.stderr)
