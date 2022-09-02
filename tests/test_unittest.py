@@ -11,9 +11,9 @@ PATH = os.path.join(DIR, "fixtures")
 def run_fixture(fixture: str, expect_status: int = 0):
     path = os.path.join(PATH)
     if "PYTHONPATH" in os.environ:
-        path += ":" + os.environ["PYTHONPATH"]
+        path += os.pathsep + os.environ["PYTHONPATH"]
     else:
-        path += ":" + os.path.abspath(os.path.join(".."))
+        path += os.pathsep + os.path.abspath(os.path.join(".."))
 
     print(repr(path), file=sys.stderr)
 
