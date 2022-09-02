@@ -18,7 +18,7 @@ def run_fixture(fixture: str, expect_status: int = 0):
             path += os.pathsep + os.path.abspath(os.path.join(".."))
         env = {"PYTHONPATH" : path}
     else:
-        env = {}
+        env = None
 
     process = subprocess.run(
         [sys.executable, "-m", "vsengine.unittest", fixture],
