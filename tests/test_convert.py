@@ -107,9 +107,11 @@ class TestToRGB(unittest.TestCase):
 
     def test_supports_float(self):
         # Test regression: Floating images cannot be shown.
-        half = core.std.BlankClip(format=vs.YUV444PH)
-        single = core.std.BlankClip(format=vs.YUV444PS)
+        yuv_half = core.std.BlankClip(format=vs.YUV444PH)
+        yuv_single = core.std.BlankClip(format=vs.YUV444PS)
+        rgb_half = core.std.BlankClip(format=vs.RGBH)
+        rgb_single = core.std.BlankClip(format=vs.RGBS)
 
-        for clip in [half, single]:
+        for clip in [yuv_half, yuv_single, rgb_half, rgb_single]:
             self.assertEqual(int(to_rgb(clip).format), vs.RGB24)
             self.assertEqual(int(to_rgb(clip, bits_per_sample=16).format), vs.RGB48)
