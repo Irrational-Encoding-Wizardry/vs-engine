@@ -35,6 +35,12 @@ def admit_environment(environment: EnvironmentData, core: Core):
 
     logger.info(f"Admitted environment {environment!r} and {core!r} as with ID:{ident}.")
 
+def any_alive():
+    gc.collect()
+    gc.collect()
+    gc.collect()
+    return bool(stage1) or bool(stage2) or bool(stage2_to_add)
+
 def _is_core_still_used(ident: int) -> bool:
     return sys.getrefcount(cores[ident]) > 2
 
