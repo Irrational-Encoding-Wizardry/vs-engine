@@ -14,11 +14,17 @@ dependencies = [
 ]
 
 [project.scripts]
-vpy-unittest = "vsengine.unittest:main"
+vpy-unittest = "vsengine.tests.unittest:main"
+
+[project.entry-points.pytest11]
+vsengine = "vsengine.tests.pytest"
 
 [project.optional-dependencies]
 trio = [
     "trio"
+]
+test = [
+    "pytest"
 ]
 
 [build-system]

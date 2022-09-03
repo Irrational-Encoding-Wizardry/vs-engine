@@ -124,7 +124,10 @@
                 format = "flit";
                 src = ./.;
                 propagatedBuildInputs = let ps = versions.python.pkgs; in [ 
-                  ps.trio ps.setuptools versions.vapoursynth 
+                  ps.trio
+                  ps.pytest
+                  ps.setuptools
+                  versions.vapoursynth 
                 ];
               });
           in 
@@ -156,6 +159,7 @@
               (versions.python.withPackages (ps: [
                 ps.flit
                 ps.trio
+                ps.pytest
                 versions.vapoursynth
               ]))
 
@@ -166,12 +170,25 @@
             ];
           });
 
-        checks = matrix.build "check"
-          (versions: pkgs.runCommandNoCC (versions.build-name "check") {} 
-            (let py = versions.python.withPackages (ps: [packages.${versions.build-name "vsengine"}]); in ''
-              ${py}/bin/python -m unittest discover -s ${./tests} -v 
-              touch $out
-            ''));
+        checks = 
+          let
+            mtx = 
+              matrix.build "check"
+              (versions: pkgs.runCommandNoCC (versions.build-name "check") {} 
+                (let py = versions.python.withPackages (ps: [packages.${versions.build-name "vsengine"}]); in ''
+                  ${py}/bin/python -m unittest discover -s ${./tests} -v 
+                  touch $out
+                ''));
+          in
+          mtx // {
+            default =
+              pkgs.runCommandNoCC "all" {} ''
+                ${builtins.concatStringsSep "\n" (map (v: ''
+                  echo ${v} > $out
+                '') (builtins.attrValues mtx))}
+              '';
+          };
+
 
         # Compat with nix<2.7
         devShell = devShells.default;

@@ -8,7 +8,7 @@ import weakref
 import logging
 import unittest
 
-from vsengine._hospice import admit_environment
+from vsengine._hospice import admit_environment, any_alive, freeze, unfreeze
 
 
 class Obj: pass
@@ -55,3 +55,31 @@ class HospiceTest(unittest.TestCase):
         gc.collect()
 
         self.assertIsNone(o2r())
+
+    def test_hospice_reports_alive_objects_correctly(self):
+        o1 = Obj()
+        o2 = Obj()
+        admit_environment(o1, o2)
+        del o1
+
+        self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
+        del o2
+
+        self.assertFalse(any_alive(), "The hospice did report that there are some objects left alive. This is obviously not true.")
+
+    def test_hospice_can_forget_about_cores_safely(self):
+        o1 = Obj()
+        o2 = Obj()
+        admit_environment(o1, o2)
+        del o1
+
+        self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
+        freeze()
+        self.assertFalse(any_alive(), "The hospice did report that there are some objects left alive. This is obviously not true.")
+
+        unfreeze()
+        self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
+        del o2
+
+        gc.collect()
+        gc.collect()

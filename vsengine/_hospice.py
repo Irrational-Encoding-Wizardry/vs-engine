@@ -21,6 +21,8 @@ stage2_to_add = set()
 stage2 = set()
 stage1 = set()
 
+hold = set()
+
 
 def admit_environment(environment: EnvironmentData, core: Core):
     global refctr
@@ -36,10 +38,29 @@ def admit_environment(environment: EnvironmentData, core: Core):
     logger.info(f"Admitted environment {environment!r} and {core!r} as with ID:{ident}.")
 
 def any_alive():
-    gc.collect()
-    gc.collect()
-    gc.collect()
+    if bool(stage1) or bool(stage2) or bool(stage2_to_add):
+        gc.collect()
+    if bool(stage1) or bool(stage2) or bool(stage2_to_add):
+        gc.collect()
+    if bool(stage1) or bool(stage2) or bool(stage2_to_add):
+        gc.collect()
     return bool(stage1) or bool(stage2) or bool(stage2_to_add)
+
+
+def freeze():
+    logger.debug(f"Freezing the hospice. Cores won't be collected anyore.")
+
+    hold.update(stage1)
+    hold.update(stage2)
+    hold.update(stage2_to_add)
+    stage1.clear()
+    stage2.clear()
+    stage2_to_add.clear()
+
+def unfreeze():
+    stage1.update(hold)
+    hold.clear()
+
 
 def _is_core_still_used(ident: int) -> bool:
     return sys.getrefcount(cores[ident]) > 2
