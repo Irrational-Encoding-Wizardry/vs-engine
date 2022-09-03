@@ -15,20 +15,22 @@
     flake = false;
   };
 
-  # VS R57
-  inputs.vs_57_vs = {
-    url = "github:vapoursynth/vapoursynth/R57";
-    flake = false;
-  };
-  inputs.vs_57_zimg = {
-    url = "github:sekrit-twc/zimg/v3.0";
-    flake = false;
-  };
+  # VS R58
   inputs.vs_58_vs = {
     url = "github:vapoursynth/vapoursynth/R58";
     flake = false;
   };
   inputs.vs_58_zimg = {
+    url = "github:sekrit-twc/zimg/v3.0";
+    flake = false;
+  };
+
+  # VS R59
+  inputs.vs_59_vs = {
+    url = "github:vapoursynth/vapoursynth/R59";
+    flake = false;
+  };
+  inputs.vs_59_zimg = {
     url = "github:sekrit-twc/zimg/v3.0";
     flake = false;
   };
@@ -44,13 +46,13 @@
       # Supported versions
       versions = {
         python = [ "39" "310" ];
-        vapoursynth = [ 57 58 "latest" ];
+        vapoursynth = [ 58 59 "latest" ];
       };
 
       # Version-Numbers for versions like "latest"
       aliases = {
         vapoursynth = {
-          latest = 59;
+          latest = 60;
         };
       };
     in

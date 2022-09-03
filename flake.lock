@@ -35,46 +35,12 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "vs_57_vs": "vs_57_vs",
-        "vs_57_zimg": "vs_57_zimg",
         "vs_58_vs": "vs_58_vs",
         "vs_58_zimg": "vs_58_zimg",
+        "vs_59_vs": "vs_59_vs",
+        "vs_59_zimg": "vs_59_zimg",
         "vs_latest_vs": "vs_latest_vs",
         "vs_latest_zimg": "vs_latest_zimg"
-      }
-    },
-    "vs_57_vs": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1634048763,
-        "narHash": "sha256-tPQ1SOIpFevOYzL9a8Lc5+dv2egVX1CY3km8yWVv+Sk=",
-        "owner": "vapoursynth",
-        "repo": "vapoursynth",
-        "rev": "325756ed04588b31840fdb74479537cddcba4bf7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "vapoursynth",
-        "ref": "R57",
-        "repo": "vapoursynth",
-        "type": "github"
-      }
-    },
-    "vs_57_zimg": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1651934905,
-        "narHash": "sha256-n4YJ0uWQ8vAlW6m2INGKYD509hAjvjbIqBY3+/rrkHs=",
-        "owner": "sekrit-twc",
-        "repo": "zimg",
-        "rev": "1c76327f50dd3e9b8b04200656440bd387c3888c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "sekrit-twc",
-        "ref": "v3.0",
-        "repo": "zimg",
-        "type": "github"
       }
     },
     "vs_58_vs": {
@@ -95,6 +61,40 @@
       }
     },
     "vs_58_zimg": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1651934905,
+        "narHash": "sha256-n4YJ0uWQ8vAlW6m2INGKYD509hAjvjbIqBY3+/rrkHs=",
+        "owner": "sekrit-twc",
+        "repo": "zimg",
+        "rev": "1c76327f50dd3e9b8b04200656440bd387c3888c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sekrit-twc",
+        "ref": "v3.0",
+        "repo": "zimg",
+        "type": "github"
+      }
+    },
+    "vs_59_vs": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1653982033,
+        "narHash": "sha256-6w7GSC5ZNIhLpulni4sKq0OvuxHlTJRilBFGH5PQW8U=",
+        "owner": "vapoursynth",
+        "repo": "vapoursynth",
+        "rev": "da7d758ff70dc9789ed89969c2d3a307483153bf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vapoursynth",
+        "ref": "R59",
+        "repo": "vapoursynth",
+        "type": "github"
+      }
+    },
+    "vs_59_zimg": {
       "flake": false,
       "locked": {
         "lastModified": 1651934905,

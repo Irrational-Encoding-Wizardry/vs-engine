@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        vs: ["57", "58", "latest"]
+        vs: ["58", "59", "latest"]
         py: ["39", "310"]
         arch: ["i686", "x86_64"]
     steps:
@@ -25,7 +25,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        vs: ["57", "58", "latest"]
+        vs: ["58", "59", "latest"]
         py: ["39", "310"]
     steps:
     - uses: actions/checkout@v2.4.0
@@ -42,7 +42,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        vs: ["57", "58"]
+        vs: ["58", "59"]
         arch: ["x64", "x86"]
         include:
         - vs: "57"
