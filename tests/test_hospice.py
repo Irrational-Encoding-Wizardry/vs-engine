@@ -6,6 +6,7 @@
 import gc
 import weakref
 import logging
+import contextlib
 import unittest
 
 from vsengine._hospice import admit_environment, any_alive, freeze, unfreeze
@@ -13,6 +14,14 @@ from vsengine._hospice import admit_environment, any_alive, freeze, unfreeze
 
 class Obj: pass
 
+
+@contextlib.contextmanager
+def hide_logs():
+    logging.disable(logging.CRITICAL)
+    try:
+        yield
+    finally:
+        logging.disable(logging.NOTSET)
 
 class HospiceTest(unittest.TestCase):
 
@@ -62,7 +71,8 @@ class HospiceTest(unittest.TestCase):
         admit_environment(o1, o2)
         del o1
 
-        self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
+        with hide_logs():
+            self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
         del o2
 
         self.assertFalse(any_alive(), "The hospice did report that there are some objects left alive. This is obviously not true.")
@@ -73,12 +83,14 @@ class HospiceTest(unittest.TestCase):
         admit_environment(o1, o2)
         del o1
 
-        self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
+        with hide_logs():
+            self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
         freeze()
         self.assertFalse(any_alive(), "The hospice did report that there are some objects left alive. This is obviously not true.")
 
         unfreeze()
-        self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
+        with hide_logs():
+            self.assertTrue(any_alive(), "The hospice did report that all objects are not alive anymore. This is obviously not true.")
         del o2
 
         gc.collect()
