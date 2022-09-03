@@ -44,9 +44,9 @@ jobs:
       matrix:
         vs: ["58", "59"]
         include:
-        - vs: "57"
-          python: "3.9"
         - vs: "58"
+          python: "3.10"
+        - vs: "59"
           python: "3.10"
     steps:
     - uses: actions/checkout@v2.4.0
