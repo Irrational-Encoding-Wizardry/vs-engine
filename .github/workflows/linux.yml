@@ -43,6 +43,7 @@ jobs:
     strategy:
       matrix:
         vs: ["58", "59"]
+        arch: ["x64", "x86"]
         include:
         - vs: "58"
           python: "3.10"
@@ -54,7 +55,7 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "${{ matrix.python }}"
-        architecture: x64
+        architecture: "${{ matrix.arch }}"
     - name: Installing dependencies
       run: |
         pip install flit
