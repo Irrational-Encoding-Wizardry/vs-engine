@@ -63,7 +63,7 @@ jobs:
         flit install --user --pth-file
     - name: Running Tests
       run: |
-        python -m unittest discover -s ./tests/
+        python -m unittest discover -s ./tests/ -v
 
   build:
     runs-on: ubuntu-latest
