@@ -63,7 +63,7 @@ def unfreeze():
 
 
 def _is_core_still_used(ident: int) -> bool:
-    return sys.getrefcount(cores[ident]) > 2
+    return sys.getrefcount(cores[ident]) > 3
 
 
 def _add_tostage1(ident: int) -> None:
